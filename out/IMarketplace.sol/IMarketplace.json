@@ -1,0 +1,58 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {},
+  "ast": {
+    "absolutePath": "src/interfaces/IMarketplace.sol",
+    "id": 23222,
+    "exportedSymbols": {
+      "IMarketplace": [
+        23221
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "31:53:8",
+    "nodes": [
+      {
+        "id": 23220,
+        "nodeType": "PragmaDirective",
+        "src": "31:24:8",
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".13"
+        ]
+      },
+      {
+        "id": 23221,
+        "nodeType": "ContractDefinition",
+        "src": "57:27:8",
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IMarketplace",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          23221
+        ],
+        "name": "IMarketplace",
+        "nameLocation": "67:12:8",
+        "scope": 23222,
+        "usedErrors": []
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 8
+}

@@ -1,0 +1,115 @@
+{
+  "abi": [],
+  "bytecode": {
+    "object": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220c20d145c1d64132837619bce8fd9d5a248a10bbb233898f71cbc517ad30c1f7364736f6c634300080f0033",
+    "sourceMap": "166:44:2:-:0;;;;;;;;;;;;;;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x6080604052600080fdfea2646970667358221220c20d145c1d64132837619bce8fd9d5a248a10bbb233898f71cbc517ad30c1f7364736f6c634300080f0033",
+    "sourceMap": "166:44:2:-:0;;;;;",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {},
+  "ast": {
+    "absolutePath": "src/Marketplace.sol",
+    "id": 143,
+    "exportedSymbols": {
+      "IMarketplace": [
+        145
+      ],
+      "Marketplace": [
+        142
+      ],
+      "Ownable": [
+        112
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "31:1627:2",
+    "nodes": [
+      {
+        "id": 136,
+        "nodeType": "PragmaDirective",
+        "src": "31:24:2",
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".13"
+        ]
+      },
+      {
+        "id": 137,
+        "nodeType": "ImportDirective",
+        "src": "57:39:2",
+        "absolutePath": "src/interfaces/IMarketplace.sol",
+        "file": "./interfaces/IMarketplace.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 143,
+        "sourceUnit": 146,
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "id": 139,
+        "nodeType": "ImportDirective",
+        "src": "97:67:2",
+        "absolutePath": "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        "file": "@openzeppelin/contracts/access/Ownable.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 143,
+        "sourceUnit": 113,
+        "symbolAliases": [
+          {
+            "foreign": {
+              "id": 138,
+              "name": "Ownable",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "referencedDeclaration": 112,
+              "src": "105:7:2",
+              "typeDescriptions": {}
+            },
+            "nameLocation": "-1:-1:-1"
+          }
+        ],
+        "unitAlias": ""
+      },
+      {
+        "id": 142,
+        "nodeType": "ContractDefinition",
+        "src": "166:44:2",
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 140,
+              "name": "IMarketplace",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 145,
+              "src": "190:12:2"
+            },
+            "id": 141,
+            "nodeType": "InheritanceSpecifier",
+            "src": "190:12:2"
+          }
+        ],
+        "canonicalName": "Marketplace",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          142,
+          145
+        ],
+        "name": "Marketplace",
+        "nameLocation": "175:11:2",
+        "scope": 143,
+        "usedErrors": []
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 2
+}
