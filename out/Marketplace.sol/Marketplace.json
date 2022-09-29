@@ -1,37 +1,153 @@
 {
-  "abi": [],
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "add",
+          "type": "address"
+        }
+      ],
+      "name": "getCurrentNonceForAddress",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "add",
+          "type": "address"
+        }
+      ],
+      "name": "incrementCurrentNonceForAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userCurrentOrderNonce",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
   "bytecode": {
-    "object": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220c20d145c1d64132837619bce8fd9d5a248a10bbb233898f71cbc517ad30c1f7364736f6c634300080f0033",
-    "sourceMap": "166:44:2:-:0;;;;;;;;;;;;;;;;;;;",
+    "object": "0x608060405234801561001057600080fd5b5061001a3361001f565b61006f565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b61030b8061007e6000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c80630645318a1461006757806328754a2c146100a3578063715018a6146100c35780638da5cb5b146100cd578063c3e371d0146100e8578063f2fde38b146100fb575b600080fd5b61009061007536600461027e565b6001600160a01b031660009081526001602052604090205490565b6040519081526020015b60405180910390f35b6100906100b136600461027e565b60016020526000908152604090205481565b6100cb61010e565b005b6000546040516001600160a01b03909116815260200161009a565b6100cb6100f636600461027e565b610122565b6100cb61010936600461027e565b610156565b6101166101d4565b610120600061022e565b565b61012a6101d4565b6001600160a01b038116600090815260016020526040812080549161014e836102ae565b919050555050565b61015e6101d4565b6001600160a01b0381166101c85760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201526564647265737360d01b60648201526084015b60405180910390fd5b6101d18161022e565b50565b6000546001600160a01b031633146101205760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064016101bf565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60006020828403121561029057600080fd5b81356001600160a01b03811681146102a757600080fd5b9392505050565b6000600182016102ce57634e487b7160e01b600052601160045260246000fd5b506001019056fea264697066735822122016e8fb9cf8d82c1d788f1e482dc042a0a6cfe8ca5335c6c2d914a3b5783bf7bd64736f6c634300080f0033",
+    "sourceMap": "166:477:9:-:0;;;286:16;;;;;;;;;-1:-1:-1;936:32:7;719:10:8;936:18:7;:32::i;:::-;166:477:9;;2433:187:7;2506:16;2525:6;;-1:-1:-1;;;;;2541:17:7;;;-1:-1:-1;;;;;;2541:17:7;;;;;;2573:40;;2525:6;;;;;;;2573:40;;2506:16;2573:40;2496:124;2433:187;:::o;166:477:9:-;;;;;;;",
     "linkReferences": {}
   },
   "deployedBytecode": {
-    "object": "0x6080604052600080fdfea2646970667358221220c20d145c1d64132837619bce8fd9d5a248a10bbb233898f71cbc517ad30c1f7364736f6c634300080f0033",
-    "sourceMap": "166:44:2:-:0;;;;;",
+    "object": "0x608060405234801561001057600080fd5b50600436106100625760003560e01c80630645318a1461006757806328754a2c146100a3578063715018a6146100c35780638da5cb5b146100cd578063c3e371d0146100e8578063f2fde38b146100fb575b600080fd5b61009061007536600461027e565b6001600160a01b031660009081526001602052604090205490565b6040519081526020015b60405180910390f35b6100906100b136600461027e565b60016020526000908152604090205481565b6100cb61010e565b005b6000546040516001600160a01b03909116815260200161009a565b6100cb6100f636600461027e565b610122565b6100cb61010936600461027e565b610156565b6101166101d4565b610120600061022e565b565b61012a6101d4565b6001600160a01b038116600090815260016020526040812080549161014e836102ae565b919050555050565b61015e6101d4565b6001600160a01b0381166101c85760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201526564647265737360d01b60648201526084015b60405180910390fd5b6101d18161022e565b50565b6000546001600160a01b031633146101205760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e657260448201526064016101bf565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60006020828403121561029057600080fd5b81356001600160a01b03811681146102a757600080fd5b9392505050565b6000600182016102ce57634e487b7160e01b600052601160045260246000fd5b506001019056fea264697066735822122016e8fb9cf8d82c1d788f1e482dc042a0a6cfe8ca5335c6c2d914a3b5783bf7bd64736f6c634300080f0033",
+    "sourceMap": "166:477:9:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;391:128;;;;;;:::i;:::-;-1:-1:-1;;;;;486:26:9;460:7;486:26;;;:21;:26;;;;;;;391:128;;;;451:25:12;;;439:2;424:18;391:128:9;;;;;;;;223:56;;;;;;:::i;:::-;;;;;;;;;;;;;;1831:101:7;;;:::i;:::-;;1201:85;1247:7;1273:6;1201:85;;-1:-1:-1;;;;;1273:6:7;;;633:51:12;;621:2;606:18;1201:85:7;487:203:12;525:116:9;;;;;;:::i;:::-;;:::i;2081:198:7:-;;;;;;:::i;:::-;;:::i;1831:101::-;1094:13;:11;:13::i;:::-;1895:30:::1;1922:1;1895:18;:30::i;:::-;1831:101::o:0;525:116:9:-;1094:13:7;:11;:13::i;:::-;-1:-1:-1;;;;;606:26:9;::::1;;::::0;;;:21:::1;:26;::::0;;;;:28;;;::::1;::::0;::::1;:::i;:::-;;;;;;525:116:::0;:::o;2081:198:7:-;1094:13;:11;:13::i;:::-;-1:-1:-1;;;;;2169:22:7;::::1;2161:73;;;::::0;-1:-1:-1;;;2161:73:7;;1134:2:12;2161:73:7::1;::::0;::::1;1116:21:12::0;1173:2;1153:18;;;1146:30;1212:34;1192:18;;;1185:62;-1:-1:-1;;;1263:18:12;;;1256:36;1309:19;;2161:73:7::1;;;;;;;;;2244:28;2263:8;2244:18;:28::i;:::-;2081:198:::0;:::o;1359:130::-;1247:7;1273:6;-1:-1:-1;;;;;1273:6:7;719:10:8;1422:23:7;1414:68;;;;-1:-1:-1;;;1414:68:7;;1541:2:12;1414:68:7;;;1523:21:12;;;1560:18;;;1553:30;1619:34;1599:18;;;1592:62;1671:18;;1414:68:7;1339:356:12;2433:187:7;2506:16;2525:6;;-1:-1:-1;;;;;2541:17:7;;;-1:-1:-1;;;;;;2541:17:7;;;;;;2573:40;;2525:6;;;;;;;2573:40;;2506:16;2573:40;2496:124;2433:187;:::o;14:286:12:-;73:6;126:2;114:9;105:7;101:23;97:32;94:52;;;142:1;139;132:12;94:52;168:23;;-1:-1:-1;;;;;220:31:12;;210:42;;200:70;;266:1;263;256:12;200:70;289:5;14:286;-1:-1:-1;;;14:286:12:o;695:232::-;734:3;755:17;;;752:140;;814:10;809:3;805:20;802:1;795:31;849:4;846:1;839:15;877:4;874:1;867:15;752:140;-1:-1:-1;919:1:12;908:13;;695:232::o",
     "linkReferences": {}
   },
-  "methodIdentifiers": {},
+  "methodIdentifiers": {
+    "getCurrentNonceForAddress(address)": "0645318a",
+    "incrementCurrentNonceForAddress(address)": "c3e371d0",
+    "owner()": "8da5cb5b",
+    "renounceOwnership()": "715018a6",
+    "transferOwnership(address)": "f2fde38b",
+    "userCurrentOrderNonce(address)": "28754a2c"
+  },
   "ast": {
     "absolutePath": "src/Marketplace.sol",
-    "id": 143,
+    "id": 23391,
     "exportedSymbols": {
       "IMarketplace": [
-        145
+        23393
       ],
       "Marketplace": [
-        142
+        23390
       ],
       "Ownable": [
-        112
+        23325
       ]
     },
     "nodeType": "SourceUnit",
-    "src": "31:1627:2",
+    "src": "31:2060:9",
     "nodes": [
       {
-        "id": 136,
+        "id": 23349,
         "nodeType": "PragmaDirective",
-        "src": "31:24:2",
+        "src": "31:24:9",
         "literals": [
           "solidity",
           "^",
@@ -40,35 +156,35 @@
         ]
       },
       {
-        "id": 137,
+        "id": 23350,
         "nodeType": "ImportDirective",
-        "src": "57:39:2",
+        "src": "57:39:9",
         "absolutePath": "src/interfaces/IMarketplace.sol",
         "file": "./interfaces/IMarketplace.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 143,
-        "sourceUnit": 146,
+        "scope": 23391,
+        "sourceUnit": 23394,
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
-        "id": 139,
+        "id": 23352,
         "nodeType": "ImportDirective",
-        "src": "97:67:2",
+        "src": "97:67:9",
         "absolutePath": "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
         "file": "@openzeppelin/contracts/access/Ownable.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 143,
-        "sourceUnit": 113,
+        "scope": 23391,
+        "sourceUnit": 23326,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 138,
+              "id": 23351,
               "name": "Ownable",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 112,
-              "src": "105:7:2",
+              "referencedDeclaration": 23325,
+              "src": "105:7:9",
               "typeDescriptions": {}
             },
             "nameLocation": "-1:-1:-1"
@@ -77,22 +193,383 @@
         "unitAlias": ""
       },
       {
-        "id": 142,
+        "id": 23390,
         "nodeType": "ContractDefinition",
-        "src": "166:44:2",
+        "src": "166:477:9",
+        "nodes": [
+          {
+            "id": 23360,
+            "nodeType": "VariableDeclaration",
+            "src": "223:56:9",
+            "constant": false,
+            "functionSelector": "28754a2c",
+            "mutability": "mutable",
+            "name": "userCurrentOrderNonce",
+            "nameLocation": "258:21:9",
+            "scope": 23390,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_address_$_t_uint256_$",
+              "typeString": "mapping(address => uint256)"
+            },
+            "typeName": {
+              "id": 23359,
+              "keyType": {
+                "id": 23357,
+                "name": "address",
+                "nodeType": "ElementaryTypeName",
+                "src": "231:7:9",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "223:27:9",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_address_$_t_uint256_$",
+                "typeString": "mapping(address => uint256)"
+              },
+              "valueType": {
+                "id": 23358,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "242:7:9",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 23364,
+            "nodeType": "FunctionDefinition",
+            "src": "286:16:9",
+            "body": {
+              "id": 23363,
+              "nodeType": "Block",
+              "src": "300:2:9",
+              "statements": []
+            },
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "parameters": {
+              "id": 23361,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "297:2:9"
+            },
+            "returnParameters": {
+              "id": 23362,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "300:0:9"
+            },
+            "scope": 23390,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 23376,
+            "nodeType": "FunctionDefinition",
+            "src": "391:128:9",
+            "body": {
+              "id": 23375,
+              "nodeType": "Block",
+              "src": "469:50:9",
+              "statements": [
+                {
+                  "expression": {
+                    "baseExpression": {
+                      "id": 23371,
+                      "name": "userCurrentOrderNonce",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 23360,
+                      "src": "486:21:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_address_$_t_uint256_$",
+                        "typeString": "mapping(address => uint256)"
+                      }
+                    },
+                    "id": 23373,
+                    "indexExpression": {
+                      "id": 23372,
+                      "name": "add",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 23366,
+                      "src": "508:3:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "486:26:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 23370,
+                  "id": 23374,
+                  "nodeType": "Return",
+                  "src": "479:33:9"
+                }
+              ]
+            },
+            "functionSelector": "0645318a",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "getCurrentNonceForAddress",
+            "nameLocation": "400:25:9",
+            "parameters": {
+              "id": 23367,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 23366,
+                  "mutability": "mutable",
+                  "name": "add",
+                  "nameLocation": "434:3:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 23376,
+                  "src": "426:11:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 23365,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "426:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "425:13:9"
+            },
+            "returnParameters": {
+              "id": 23370,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 23369,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 23376,
+                  "src": "460:7:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 23368,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "460:7:9",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "459:9:9"
+            },
+            "scope": 23390,
+            "stateMutability": "view",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 23389,
+            "nodeType": "FunctionDefinition",
+            "src": "525:116:9",
+            "body": {
+              "id": 23388,
+              "nodeType": "Block",
+              "src": "596:45:9",
+              "statements": [
+                {
+                  "expression": {
+                    "id": 23386,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "UnaryOperation",
+                    "operator": "++",
+                    "prefix": false,
+                    "src": "606:28:9",
+                    "subExpression": {
+                      "baseExpression": {
+                        "id": 23383,
+                        "name": "userCurrentOrderNonce",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 23360,
+                        "src": "606:21:9",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_address_$_t_uint256_$",
+                          "typeString": "mapping(address => uint256)"
+                        }
+                      },
+                      "id": 23385,
+                      "indexExpression": {
+                        "id": 23384,
+                        "name": "add",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 23378,
+                        "src": "628:3:9",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "606:26:9",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 23387,
+                  "nodeType": "ExpressionStatement",
+                  "src": "606:28:9"
+                }
+              ]
+            },
+            "functionSelector": "c3e371d0",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [
+              {
+                "id": 23381,
+                "kind": "modifierInvocation",
+                "modifierName": {
+                  "id": 23380,
+                  "name": "onlyOwner",
+                  "nodeType": "IdentifierPath",
+                  "referencedDeclaration": 23244,
+                  "src": "586:9:9"
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "586:9:9"
+              }
+            ],
+            "name": "incrementCurrentNonceForAddress",
+            "nameLocation": "534:31:9",
+            "parameters": {
+              "id": 23379,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 23378,
+                  "mutability": "mutable",
+                  "name": "add",
+                  "nameLocation": "574:3:9",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 23389,
+                  "src": "566:11:9",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 23377,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "566:7:9",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "565:13:9"
+            },
+            "returnParameters": {
+              "id": 23382,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "596:0:9"
+            },
+            "scope": 23390,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
         "abstract": false,
         "baseContracts": [
           {
             "baseName": {
-              "id": 140,
+              "id": 23353,
               "name": "IMarketplace",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 145,
-              "src": "190:12:2"
+              "referencedDeclaration": 23393,
+              "src": "190:12:9"
             },
-            "id": 141,
+            "id": 23354,
             "nodeType": "InheritanceSpecifier",
-            "src": "190:12:2"
+            "src": "190:12:9"
+          },
+          {
+            "baseName": {
+              "id": 23355,
+              "name": "Ownable",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 23325,
+              "src": "204:7:9"
+            },
+            "id": 23356,
+            "nodeType": "InheritanceSpecifier",
+            "src": "204:7:9"
           }
         ],
         "canonicalName": "Marketplace",
@@ -100,16 +577,18 @@
         "contractKind": "contract",
         "fullyImplemented": true,
         "linearizedBaseContracts": [
-          142,
-          145
+          23390,
+          23325,
+          23347,
+          23393
         ],
         "name": "Marketplace",
-        "nameLocation": "175:11:2",
-        "scope": 143,
+        "nameLocation": "175:11:9",
+        "scope": 23391,
         "usedErrors": []
       }
     ],
     "license": "MIT"
   },
-  "id": 2
+  "id": 9
 }
