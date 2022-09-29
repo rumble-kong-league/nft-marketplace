@@ -4,8 +4,21 @@ pragma solidity ^0.8.13;
 import "./interfaces/IMarketplace.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Marketplace is IMarketplace {
+contract Marketplace is IMarketplace, Ownable {
+    
+    mapping(address => uint256) public userCurrentOrderNonce; // used to keep track of a user's latest nonce
+
+    constructor() {}
    
+   // ============ NONCE METHODS =============================================
+
+    function getCurrentNonceForAddress(address add) public view returns (uint256) {
+        return userCurrentOrderNonce[add];
+    }
+
+    function incrementCurrentNonceForAddress(address add) public onlyOwner {
+        userCurrentOrderNonce[add]++;
+    }
 }
 
 /*
