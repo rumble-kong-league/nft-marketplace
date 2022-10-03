@@ -7,8 +7,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
+import {SignatureVerifier} from "./SignatureVerifier.sol";
+import {
+    _EIP_712_DOMAIN_TYPEHASH,
+    _NAME_HASH,
+    _VERSION_HASH
+} from "./Constants.sol";
 
-contract Marketplace is IMarketplace, Ownable {
+contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     using Orders for Orders.Order;
 
     mapping(address => uint256) public userCurrentOrderNonce; // used to keep track of a user's latest nonce
@@ -34,7 +40,28 @@ contract Marketplace is IMarketplace, Ownable {
 
     function _validateOrder(Orders.Order calldata order) internal {
 
+        // Generate somain seperator
+        bytes32 _DOMAIN_SEPARATOR = _deriveDomainSeparator();
 
+        // Validate signature
+        bytes32 digest = _deriveEIP712Digest(_DOMAIN_SEPARATOR, order.hash());
+        _assertValidSignature(
+            order.signer,
+            digest,
+            order.signature
+        );
+    }
+
+    function _deriveDomainSeparator() public view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                _EIP_712_DOMAIN_TYPEHASH,
+                _NAME_HASH,
+                _VERSION_HASH,
+                block.chainid,
+                address(this)
+            )
+        );
     }
 
     function _fulfillOrder(Orders.Order calldata order, address from, address to) internal {

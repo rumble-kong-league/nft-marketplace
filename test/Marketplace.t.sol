@@ -55,6 +55,14 @@ contract MarketplaceTest is TestTokenMinter {
             address(token1),
             ""
         );
+        bytes32 domainSeparator = marketplace._deriveDomainSeparator();
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            bobPk,
+            keccak256(
+                abi.encodePacked(bytes2(0x1901), domainSeparator, order.hash())
+            )
+        );
+        order.signature = abi.encodePacked(r, s, v);
 
         // Bob approves the marketplace to transfer token 0 for him
         vm.prank(bob);
