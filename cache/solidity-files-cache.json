@@ -1071,8 +1071,8 @@
       }
     },
     "src/Constants.sol": {
-      "lastModificationDate": 1664815384320,
-      "contentHash": "09e20b6f0462b0fdd8c8b3366144a48c",
+      "lastModificationDate": 1664816052255,
+      "contentHash": "e9844ce53129c168f8776f559b831d30",
       "sourceName": "src/Constants.sol",
       "solcConfig": {
         "settings": {
@@ -1109,8 +1109,8 @@
       }
     },
     "src/Marketplace.sol": {
-      "lastModificationDate": 1664815373710,
-      "contentHash": "cc4438dd11548fa5863a54c43dd3a797",
+      "lastModificationDate": 1664817550837,
+      "contentHash": "6547a5537cea2cbf2bf98bd5016088bc",
       "sourceName": "src/Marketplace.sol",
       "solcConfig": {
         "settings": {
@@ -1152,8 +1152,12 @@
         "lib/openzeppelin-contracts/contracts/utils/Context.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol",
+        "src/Constants.sol",
         "src/Order.sol",
-        "src/interfaces/IMarketplace.sol"
+        "src/SignatureVerifier.sol",
+        "src/interfaces/EIP1271Interface.sol",
+        "src/interfaces/IMarketplace.sol",
+        "src/interfaces/SignatureVerificationErrors.sol"
       ],
       "versionRequirement": "^0.8.13",
       "artifacts": {
@@ -1197,6 +1201,48 @@
       "artifacts": {
         "Orders": {
           "0.8.15+commit.e14f2714.Darwin.appleclang": "Order.sol/Orders.json"
+        }
+      }
+    },
+    "src/SignatureVerifier.sol": {
+      "lastModificationDate": 1664818070617,
+      "contentHash": "02ce82c301c640bd20d8c7a4d7d60687",
+      "sourceName": "src/SignatureVerifier.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "src/Constants.sol",
+        "src/interfaces/EIP1271Interface.sol",
+        "src/interfaces/SignatureVerificationErrors.sol"
+      ],
+      "versionRequirement": "^0.8.7",
+      "artifacts": {
+        "SignatureVerifier": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "SignatureVerifier.sol/SignatureVerifier.json"
         }
       }
     },
@@ -1278,9 +1324,47 @@
         }
       }
     },
+    "src/interfaces/SignatureVerificationErrors.sol": {
+      "lastModificationDate": 1664815975296,
+      "contentHash": "6a9c420736e5e3b2b65ba88b51ea7ff1",
+      "sourceName": "src/interfaces/SignatureVerificationErrors.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.7",
+      "artifacts": {
+        "SignatureVerificationErrors": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "SignatureVerificationErrors.sol/SignatureVerificationErrors.json"
+        }
+      }
+    },
     "test/Marketplace.t.sol": {
-      "lastModificationDate": 1664815628869,
-      "contentHash": "761438b95603532a721c88661f4b112a",
+      "lastModificationDate": 1664816693644,
+      "contentHash": "8989ed41cadc3440ea56b54893cdff0c",
       "sourceName": "test/Marketplace.t.sol",
       "solcConfig": {
         "settings": {
@@ -1334,9 +1418,13 @@
         "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol",
         "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+        "src/Constants.sol",
         "src/Marketplace.sol",
         "src/Order.sol",
+        "src/SignatureVerifier.sol",
+        "src/interfaces/EIP1271Interface.sol",
         "src/interfaces/IMarketplace.sol",
+        "src/interfaces/SignatureVerificationErrors.sol",
         "test/TestERC20.sol",
         "test/TestERC721.sol",
         "test/TestTokenMinter.sol"
@@ -1345,6 +1433,80 @@
       "artifacts": {
         "MarketplaceTest": {
           "0.8.15+commit.e14f2714.Darwin.appleclang": "Marketplace.t.sol/MarketplaceTest.json"
+        }
+      }
+    },
+    "test/SignatureVerifier.t.sol": {
+      "lastModificationDate": 1664816812530,
+      "contentHash": "f65859a05aefce6aad18387acdc3d74d",
+      "sourceName": "test/SignatureVerifier.t.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/lib/ds-test/src/test.sol",
+        "lib/forge-std/src/Script.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/Test.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC1155/IERC1155.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC1155/IERC1155Receiver.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol",
+        "lib/openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Address.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Context.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Strings.sol",
+        "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol",
+        "lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+        "src/Constants.sol",
+        "src/Marketplace.sol",
+        "src/Order.sol",
+        "src/SignatureVerifier.sol",
+        "src/interfaces/EIP1271Interface.sol",
+        "src/interfaces/IMarketplace.sol",
+        "src/interfaces/SignatureVerificationErrors.sol",
+        "test/TestERC20.sol",
+        "test/TestERC721.sol",
+        "test/TestTokenMinter.sol"
+      ],
+      "versionRequirement": "^0.8.13",
+      "artifacts": {
+        "SignatureVerifierTest": {
+          "0.8.15+commit.e14f2714.Darwin.appleclang": "SignatureVerifier.t.sol/SignatureVerifierTest.json"
         }
       }
     },
