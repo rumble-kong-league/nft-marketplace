@@ -3,16 +3,113 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IMarketplace.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+
 
 contract Marketplace is IMarketplace, Ownable {
-    
+    using Orders for Orders.Order;
+
     mapping(address => uint256) public userCurrentOrderNonce; // used to keep track of a user's latest nonce
 
-    constructor() {}
-   
-   // ============ NONCE METHODS =============================================
+    event OrderExecuted(address from, address to, address collection, uint256 tokenId, address currency, uint256 price);
+    
 
-    function getCurrentNonceForAddress(address add) public view returns (uint256) {
+    constructor() {}
+
+    // ============ ORDER METHODS ==================
+
+    function fulfillOrder(Orders.Order calldata order) external {
+
+        // Validate order
+        _validateOrder(order);
+
+        // TODO: Cancel nonce
+
+        address from = order.isAsk ? order.signer : msg.sender;
+        address to = order.isAsk ? msg.sender : order.signer;
+        _fulfillOrder( order, from, to );
+    }
+
+    function _validateOrder(Orders.Order calldata order) internal {
+
+
+    }
+
+    function _fulfillOrder(Orders.Order calldata order, address from, address to) internal {
+            // Transfer ERC20 tokens
+            _transferFeesAndFunds(
+                msg.sender,
+                order.signer,
+                order.currency,
+                order.price
+            );
+
+            // Transfer ERC721 tokens
+            _transferNonFungibleToken(
+                order.collection,
+                order.signer,
+                msg.sender,
+                order.tokenId,
+                order.amount
+            );
+
+            emit OrderExecuted(from, to, order.collection, order.tokenId, order.currency, order.price);
+    }
+
+
+
+    // ============ Transfer methods ==============
+
+    /**
+     * @notice Transfer NFT
+     * @param collection address of the token collection
+     * @param from address of the sender
+     * @param to address of the recipient
+     * @param tokenId tokenId
+     * @param amount amount of tokens (1 for ERC721, 1+ for ERC1155)
+     * @dev For ERC721, amount is not used
+     */
+    function _transferNonFungibleToken(
+        address collection,
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 amount
+    ) internal {
+        // https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#IERC721-safeTransferFrom
+        IERC721(collection).safeTransferFrom(from, to, tokenId);
+    }
+
+    /**
+     * @notice Transfer fees and funds to royalty recipient, protocol, and seller
+     * @param from sender of the funds
+     * @param to seller's recipient
+     * @param amount amount being transferred (in currency)
+     */
+    function _transferFeesAndFunds(
+        address from,
+        address to,
+        address currency,
+        uint256 amount
+    ) internal {
+
+        // 1. Protocol fee?
+        // 2. Royalty fee?
+        // 3. Transfer final amount (post-fees) to seller
+        {
+            IERC20(currency).transferFrom(from, to, amount);
+        }
+    }
+
+    // ============ NONCE METHODS ==================
+
+    function getCurrentNonceForAddress(address add)
+        public
+        view
+        returns (uint256)
+    {
         return userCurrentOrderNonce[add];
     }
 
