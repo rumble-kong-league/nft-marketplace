@@ -6,6 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {SignatureVerifier} from "./SignatureVerifier.sol";
 import {
@@ -17,27 +18,47 @@ import {
 contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     using Orders for Orders.Order;
 
-    mapping(address => uint256) public userCurrentOrderNonce; // used to keep track of a user's latest nonce
+    mapping(address => uint256) public userCurrentOrderNonce; // keeps track of a user's latest nonce
+    mapping(address => uint256) public userMinOrderNonce; // keeps track of a user's min active nonce
+    mapping(address => mapping(uint256 => bool))
+        public _isUserOrderNonceExecutedOrCancelled; // keeps track of random nonces that have been cancelled
 
-    event OrderExecuted(address from, address to, address collection, uint256 tokenId, address currency, uint256 price);
+    event CancelAllOrders(address indexed user, uint256 newMinNonce);
+    event CancelMultipleOrders(address indexed user, uint256[] orderNonces);
+    event OrderFulfilled(
+        address from,
+        address to,
+        address collection,
+        uint256 tokenId,
+        address currency,
+        uint256 price
+    );
+
+    error InvalidNonce();
 
     constructor() {}
 
     // ============ ORDER METHODS ==================
 
+    /**
+     * @notice Fulfills an order stored off chain. Call must be made by
+     * either the buyer or the seller depending if the order is an ask or bid.
+     * Order must also be signed according to the EIP-712 standard and order.signer
+     * must be the address of the order.signature signer.
+     * @param order The order to be fulfilled
+     */
     function fulfillOrder(Orders.Order calldata order) external {
-
         _validateOrder(order);
 
-        // TODO: Cancel nonce
+        // Update signer order status to true (prevents replay)
+        _isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
 
-        address from = order.isAsk ? order.signer : msg.sender;
-        address to = order.isAsk ? msg.sender : order.signer;
-        _fulfillOrder( order, from, to );
+        // Fulfill order
+        _fulfillOrder(order);
     }
 
-    function _validateOrder(Orders.Order calldata order) internal view {
-
+    function _validateOrder(Orders.Order calldata order) view internal {
+        // Signature verification
         bytes32 _DOMAIN_SEPARATOR = _deriveDomainSeparator();
 
         // Validate signature
@@ -47,6 +68,11 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
             digest,
             order.signature
         );
+        // Nonce is valid verification
+        if((_isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce]) ||
+           (order.nonce < userMinOrderNonce[order.signer])){
+            revert InvalidNonce();
+        }
     }
 
     function _deriveDomainSeparator() public view returns (bytes32) {
@@ -61,33 +87,83 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         );
     }
 
-    function _fulfillOrder(Orders.Order calldata order, address from, address to) internal {
-            // Transfer ERC20 tokens
-            _transferFeesAndFunds(
-                msg.sender,
-                order.signer,
-                order.currency,
-                order.price
-            );
+    function _fulfillOrder(
+        Orders.Order calldata order
+    ) internal {
+        address seller = order.isAsk ? order.signer : msg.sender;
+        address buyer = order.isAsk ? msg.sender : order.signer;
 
-            // Transfer ERC721 tokens
-            _transferNonFungibleToken(
-                order.collection,
-                order.signer,
-                msg.sender,
-                order.tokenId,
-                order.amount
-            );
+        // Transfer ERC20 tokens
+        _transferFeesAndFunds(
+            buyer,
+            seller,
+            order.currency,
+            order.price
+        );
 
-            emit OrderExecuted(from, to, order.collection, order.tokenId, order.currency, order.price);
+        // Transfer ERC721 tokens
+        _transferNonFungibleToken(
+            order.collection,
+            seller,
+            buyer,
+            order.tokenId,
+            order.amount
+        );
+
+        emit OrderFulfilled(
+            seller,
+            buyer,
+            order.collection,
+            order.tokenId,
+            order.currency,
+            order.price
+        );
     }
 
+    /**
+     * @notice Cancel all pending orders for a sender
+     * @param minNonce minimum user nonce
+     */
+    function cancelAllOrdersForSender(uint256 minNonce) external {
+        require(
+            minNonce > userMinOrderNonce[msg.sender],
+            "Cancel: Order nonce lower than current"
+        );
+        require(
+            minNonce < userMinOrderNonce[msg.sender] + 500000,
+            "Cancel: Cannot cancel more orders"
+        );
+        userMinOrderNonce[msg.sender] = minNonce;
 
+        emit CancelAllOrders(msg.sender, minNonce);
+    }
+
+    /**
+     * @notice Cancel maker orders
+     * @param orderNonces array of order nonces
+     */
+    function cancelMultipleOrders(uint256[] calldata orderNonces)
+        external
+    {
+        require(orderNonces.length > 0, "Cancel: Cannot be empty");
+
+        for (uint256 i = 0; i < orderNonces.length; i++) {
+            require(
+                orderNonces[i] >= userMinOrderNonce[msg.sender],
+                "Cancel: Order nonce lower than current"
+            );
+            _isUserOrderNonceExecutedOrCancelled[msg.sender][
+                orderNonces[i]
+            ] = true;
+        }
+
+        emit CancelMultipleOrders(msg.sender, orderNonces);
+    }
 
     // ============ Transfer methods ==============
 
     /**
-     * @notice Transfer NFT
+     * @notice Transfer ERC721 NFT
      * @param collection address of the token collection
      * @param from address of the sender
      * @param to address of the recipient
@@ -120,7 +196,6 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         address currency,
         uint256 amount
     ) internal {
-
         // 1. Protocol fee?
         // 2. Royalty fee?
         // 3. Transfer final amount (post-fees) to seller
@@ -137,6 +212,14 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         returns (uint256)
     {
         return userCurrentOrderNonce[add];
+    }
+
+    function getIsUserOrderNonceExecutedOrCanceled(address add, uint256 nonce) public view returns (bool) {
+        return _isUserOrderNonceExecutedOrCancelled[add][nonce];
+    }
+
+    function getCurrentMinNonceForAddress(address add) public view returns (uint256) {
+        return userMinOrderNonce[add];
     }
 
     function incrementCurrentNonceForAddress(address add) public onlyOwner {
