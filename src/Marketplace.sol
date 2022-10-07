@@ -35,10 +35,12 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     );
 
     error InvalidNonce();
+    error OrderExpired();
+    error OrderNotActive();
 
     constructor() {}
 
-    // ============ ORDER METHODS ==================
+    // ============ Order methods ==================
 
     /**
      * @notice Fulfills an order stored off chain. Call must be made by
@@ -68,6 +70,16 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
             digest,
             order.signature
         );
+
+        // Time verification
+        if (order.startTime > block.timestamp) {
+            revert OrderNotActive();
+        }
+        
+        if (order.endTime < block.timestamp) {
+            revert OrderExpired();
+        }
+
         // Nonce is valid verification
         if((_isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce]) ||
            (order.nonce < userMinOrderNonce[order.signer])){
@@ -204,7 +216,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         }
     }
 
-    // ============ NONCE METHODS ==================
+    // ============ View methods ==================
 
     function getCurrentNonceForAddress(address add)
         public

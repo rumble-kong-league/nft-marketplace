@@ -11,4 +11,8 @@ interface IMarketplace {
 
     function incrementCurrentNonceForAddress(address add) external;
 
+    function cancelMultipleOrders(uint256[] calldata orderNonces) external;
+
+    function cancelAllOrdersForSender(uint256 minNonce) external;
+
 }
