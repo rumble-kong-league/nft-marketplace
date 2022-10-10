@@ -36,7 +36,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         _fulfillOrder( order, from, to );
     }
 
-    function _validateOrder(Orders.Order calldata order) internal {
+    function _validateOrder(Orders.Order calldata order) internal view {
 
         bytes32 _DOMAIN_SEPARATOR = _deriveDomainSeparator();
 
