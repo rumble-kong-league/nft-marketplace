@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "./interfaces/IMarketplace.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -17,6 +19,10 @@ import {
 
 contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     using Orders for Orders.Order;
+    using ERC165Checker for address;
+
+    bytes4 public constant IID_IERC1155 = type(IERC1155).interfaceId;
+    bytes4 public constant IID_IERC721 = type(IERC721).interfaceId;
 
     mapping(address => uint256) public userCurrentOrderNonce; // keeps track of a user's latest nonce
     mapping(address => uint256) public userMinOrderNonce; // keeps track of a user's min active nonce
@@ -186,10 +192,10 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         uint256 tokenId,
         uint256 amount
     ) internal {
-        if (amount == 1) {
+        if (collection.supportsInterface(IID_IERC721)) {
             // https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#IERC721-safeTransferFrom
             IERC721(collection).safeTransferFrom(from, to, tokenId);
-        } else if (amount > 1) {
+        } else if (collection.supportsInterface(IID_IERC1155)) {
             IERC1155(collection).safeTransferFrom(from, to, tokenId, amount, "");
         } else {
             revert InvalidTokenAmount();
