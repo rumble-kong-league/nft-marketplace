@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import "forge-std/Test.sol";
 import {TestERC20} from "../test/TestERC20.sol";
 import {TestERC721} from "../test/TestERC721.sol";
+import {TestERC1155} from "../test/TestERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract TestTokenMinter is Test {
@@ -24,8 +25,13 @@ contract TestTokenMinter is Test {
     TestERC721 internal test721_2;
     TestERC721 internal test721_3;
 
+    TestERC1155 internal test1155_1;
+    TestERC1155 internal test1155_2;
+    TestERC1155 internal test1155_3;
+
     TestERC20[] erc20s;
     TestERC721[] erc721s;
+    TestERC1155[] erc1155s;
 
     function setUp() public virtual {
         vm.label(alice, "alice");
@@ -35,6 +41,7 @@ contract TestTokenMinter is Test {
         _deployTestTokenContracts();
         erc20s = [token1, token2, token3];
         erc721s = [test721_1, test721_2, test721_3];
+        erc1155s = [test1155_1, test1155_2, test1155_3];
 
         // allocate funds and tokens to test addresses
 
@@ -68,6 +75,23 @@ contract TestTokenMinter is Test {
         token.mint(to, amount);
     }
 
+    function mintErc1155TokensTo(
+        address to,
+        uint256 id,
+        uint256 amount
+    ) internal {
+        mintErc1155TokensTo(to, test1155_1, id, amount);
+    }
+
+    function mintErc1155TokensTo(
+        address to,
+        TestERC1155 token,
+        uint256 id,
+        uint256 amount
+    ) internal {
+        token.mint(to, id, amount);
+    }
+
     /**
     @dev deploy test token contracts
      */
@@ -78,9 +102,13 @@ contract TestTokenMinter is Test {
         test721_1 = new TestERC721();
         test721_2 = new TestERC721();
         test721_3 = new TestERC721();
+        test1155_1 = new TestERC1155();
+        test1155_2 = new TestERC1155();
+        test1155_3 = new TestERC1155();
 
         vm.label(address(token1), "token1");
         vm.label(address(test721_1), "test721_1");
+        vm.label(address(test1155_1), "test1155_1");
 
         emit log("Deployed test token contracts");
     }

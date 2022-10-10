@@ -22,6 +22,7 @@ contract MarketplaceTest is TestTokenMinter {
         address to,
         address collection,
         uint256 tokenId,
+        uint256 amount,
         address currency,
         uint256 price
     );
@@ -31,7 +32,7 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace = new Marketplace();
     }
 
-    function setUpBobAskOrder() internal returns (Orders.Order memory) {
+    function setUpBobAskERC721Order() internal returns (Orders.Order memory) {
         // Set up
         // Assert starting state
         uint256 startingAmount = 100;
@@ -63,7 +64,7 @@ contract MarketplaceTest is TestTokenMinter {
         return order;
     }
 
-    function setUpBobBidOrder() internal returns (Orders.Order memory) {
+    function setUpBobBidERC721Order() internal returns (Orders.Order memory) {
         // Set up
         // Assert starting state
         uint256 startingAmount = 100;
@@ -95,18 +96,58 @@ contract MarketplaceTest is TestTokenMinter {
         return order;
     }
 
-    function assertBobAskOrderFulfilled(uint256 startingAmount, uint256 tokenPrice) internal {
+    function setUpBobBidERC1155Order() internal returns (Orders.Order memory) {
+        // Set up
+        // Assert starting state
+        uint256 startingAmount = 100;
+        uint256 tokenPrice = 20;
+
+        // Bob mints an ERC721 token
+        test1155_1.mint(bob, 0, 10);
+        assertEq(test1155_1.balanceOf(alice, 0), 0);
+        assertEq(test1155_1.balanceOf(bob, 0), 10);
+        assertEq(token1.balanceOf(alice), startingAmount);
+        assertEq(token1.balanceOf(bob), startingAmount);
+
+        // Bob creates an order to sell his nft for 20 ERC20 tokens
+        Orders.Order memory order = Orders.Order({
+            isAsk: true,
+            signer: bob,
+            signature: EMPTY_STRING,
+            nonce: 0,
+            startTime: FAR_PAST_TIMESTAMP,
+            endTime: FAR_FUTURE_TIMESTAMP,
+            collection: address(test1155_1),
+            tokenId: 0,
+            amount: 10,
+            price: 20,
+            currency: address(token1),
+            params: EMPTY_STRING 
+        });
+
+        return order;
+    }
+
+    function assertBobAskERC721OrderFulfilled(uint256 startingAmount, uint256 tokenPrice) internal {
         assertEq(test721_1.balanceOf(alice), 1);
         assertEq(test721_1.balanceOf(bob), 0);
         assert(token1.balanceOf(alice) == startingAmount - tokenPrice);
         assert(token1.balanceOf(bob) == startingAmount + tokenPrice);
     }
 
-    function assertBobBidOrderFulfilled(uint256 startingAmount, uint256 tokenPrice) internal {
+    function assertBobBidERC721OrderFulfilled(uint256 startingAmount, uint256 tokenPrice) internal {
         assertEq(test721_1.balanceOf(bob), 1);
         assertEq(test721_1.balanceOf(alice), 0);
         assertEq(token1.balanceOf(bob), startingAmount - tokenPrice);
         assertEq(token1.balanceOf(alice), startingAmount + tokenPrice);
+        assertEq(marketplace.getIsUserOrderNonceExecutedOrCanceled(bob, 0), true);
+    }
+
+    function assertBobBidERC1155OrderFulfilled(uint256 startingAmount, uint256 tokenPrice) internal {
+        assertEq(test1155_1.balanceOf(bob, 0), 0);
+        assertEq(test1155_1.balanceOf(alice, 0), 10);
+        assertEq(token1.balanceOf(alice), startingAmount - tokenPrice);
+        assertEq(token1.balanceOf(bob), startingAmount + tokenPrice);
         assertEq(marketplace.getIsUserOrderNonceExecutedOrCanceled(bob, 0), true);
     }
 
@@ -118,13 +159,13 @@ contract MarketplaceTest is TestTokenMinter {
         assertEq(marketplace.getCurrentNonceForAddress(alice), 1);
     }
 
-    function testFulfillAskOrder() public {
+    function testFulfillAskERC721Order() public {
 
         uint256 startingAmount = 100;
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
         
-        Orders.Order memory order = setUpBobAskOrder();
+        Orders.Order memory order = setUpBobAskERC721Order();
 
         // Bob approves the marketplace to transfer token 0 for him
         vm.prank(bob);
@@ -136,24 +177,24 @@ contract MarketplaceTest is TestTokenMinter {
         
         // We expect an order fulfilled emit
         vm.expectEmit(true, true, false, false);
-        emit OrderFulfilled(bob, alice, address(test721_1), 0, address(token1), 20);
+        emit OrderFulfilled(bob, alice, address(test721_1), 0, 1, address(token1), 20);
 
         // Alice fulfills bobs order
         marketplace.fulfillOrder(order);
 
         // Assert that alice got the ERC721 token and bob the ERC20 tokens
-        assertBobAskOrderFulfilled(startingAmount, tokenPrice);
+        assertBobAskERC721OrderFulfilled(startingAmount, tokenPrice);
     }
 
-    function testFulfillBidOrder() public {
+    function testFulfillBidERC721Order() public {
 
         uint256 startingAmount = 100;
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
         
-        Orders.Order memory order = setUpBobBidOrder();
+        Orders.Order memory order = setUpBobBidERC721Order();
 
-        // Alice approves the marketplace to transfer token 0 for him
+        // Alice approves the marketplace to transfer token 0 for her
         vm.prank(alice);
         test721_1.approve(address(marketplace), tokenId);
         
@@ -163,7 +204,7 @@ contract MarketplaceTest is TestTokenMinter {
         
         // We expect an order fulfilled emit
         vm.expectEmit(true, true, false, false);
-        emit OrderFulfilled(alice, bob, address(test721_1), 0, address(token1), 20);
+        emit OrderFulfilled(alice, bob, address(test721_1), 0, 1, address(token1), 20);
 
         vm.stopPrank();
 
@@ -172,7 +213,34 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(order);
 
         // Assert that alice got the ERC721 token and bob the ERC20 tokens
-        assertBobBidOrderFulfilled(startingAmount, tokenPrice);
+        assertBobBidERC721OrderFulfilled(startingAmount, tokenPrice);
+    }
+
+    function testFulfillAskERC1155Order() public {
+
+        uint256 startingAmount = 100;
+        uint256 tokenPrice = 20;
+        uint256 tokenId = 0;
+        
+        Orders.Order memory order = setUpBobBidERC1155Order();
+
+        // Bob approves the marketplace to transfer token 0 for him
+        vm.prank(bob);
+        test1155_1.setApprovalForAll(address(marketplace), true);
+        
+        // Alice approves marketplace to send ERC20 tokens for her
+        vm.startPrank(alice);
+        token1.approve(address(marketplace), tokenPrice);
+        
+        // We expect an order fulfilled emit
+        vm.expectEmit(true, true, false, false);
+        emit OrderFulfilled(bob, alice, address(test721_1), 0, 10, address(token1), 20);
+
+        // Alice fulfills bobs order
+        marketplace.fulfillOrder(order);
+
+        // Assert that alice got the ERC721 token and bob the ERC20 tokens
+        assertBobBidERC1155OrderFulfilled(startingAmount, tokenPrice);
     }
 
     function testCancelAllOrdersForSender() public {
@@ -181,7 +249,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
 
-        Orders.Order memory order = setUpBobAskOrder();
+        Orders.Order memory order = setUpBobAskERC721Order();
         order.nonce = 1;
 
         // Bob approves the marketplace to transfer token 0 for him
@@ -205,7 +273,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
 
-        Orders.Order memory order = setUpBobAskOrder();
+        Orders.Order memory order = setUpBobAskERC721Order();
         
         order.nonce = 11; 
 
@@ -224,7 +292,7 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(order);
 
         // Assert that alice got the ERC721 token and bob the ERC20 tokens
-        assertBobAskOrderFulfilled(startingAmount, tokenPrice);
+        assertBobAskERC721OrderFulfilled(startingAmount, tokenPrice);
     }
 
     function testCancelMultipleOrders() public {
@@ -232,7 +300,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
 
-        Orders.Order memory order = setUpBobAskOrder();
+        Orders.Order memory order = setUpBobAskERC721Order();
         order.nonce = 10;
 
         // Bob approves the marketplace to transfer token 0 for him
@@ -258,7 +326,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
         
-        Orders.Order memory order = setUpBobAskOrder();
+        Orders.Order memory order = setUpBobAskERC721Order();
         order.endTime = FAR_PAST_TIMESTAMP;
         order.startTime = FAR_PAST_TIMESTAMP;
         
@@ -280,7 +348,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256 tokenPrice = 20;
         uint256 tokenId = 0;
         
-        Orders.Order memory order = setUpBobAskOrder();
+        Orders.Order memory order = setUpBobAskERC721Order();
         order.startTime = FAR_FUTURE_TIMESTAMP;
         
         // Bob approves the marketplace to transfer token 0 for him

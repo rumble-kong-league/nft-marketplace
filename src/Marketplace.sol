@@ -30,6 +30,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         address to,
         address collection,
         uint256 tokenId,
+        uint256 amount,
         address currency,
         uint256 price
     );
@@ -37,6 +38,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     error InvalidNonce();
     error OrderExpired();
     error OrderNotActive();
+    error InvalidTokenAmount();
 
     constructor() {}
 
@@ -122,15 +124,9 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
             order.amount
         );
 
-        emit OrderFulfilled(
-            seller,
-            buyer,
-            order.collection,
-            order.tokenId,
-            order.currency,
-            order.price
-        );
+        emit OrderFulfilled(seller, buyer, order.collection, order.tokenId, order.amount, order.currency, order.price);
     }
+
 
     /**
      * @notice Cancel all pending orders for a sender
@@ -149,7 +145,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
 
         emit CancelAllOrders(msg.sender, minNonce);
     }
-
+    
     /**
      * @notice Cancel maker orders
      * @param orderNonces array of order nonces
@@ -190,10 +186,14 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         uint256 tokenId,
         uint256 amount
     ) internal {
-        // TODO: this does not handle ERC1155
-        // https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#IERC721-safeTransferFrom
-        // TODO: check your link above. 2.x is the oldest openzeppelin contracts. Current version is 4.x
-        IERC721(collection).safeTransferFrom(from, to, tokenId);
+        if (amount == 1) {
+            // https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#IERC721-safeTransferFrom
+            IERC721(collection).safeTransferFrom(from, to, tokenId);
+        } else if (amount > 1) {
+            IERC1155(collection).safeTransferFrom(from, to, tokenId, amount, "");
+        } else {
+            revert InvalidTokenAmount();
+        }
     }
 
     /**
