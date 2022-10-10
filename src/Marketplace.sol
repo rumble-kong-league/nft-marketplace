@@ -20,7 +20,6 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     mapping(address => uint256) public userCurrentOrderNonce; // used to keep track of a user's latest nonce
 
     event OrderExecuted(address from, address to, address collection, uint256 tokenId, address currency, uint256 price);
-    
 
     constructor() {}
 
@@ -28,7 +27,6 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
 
     function fulfillOrder(Orders.Order calldata order) external {
 
-        // Validate order
         _validateOrder(order);
 
         // TODO: Cancel nonce
@@ -40,7 +38,6 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
 
     function _validateOrder(Orders.Order calldata order) internal {
 
-        // Generate somain seperator
         bytes32 _DOMAIN_SEPARATOR = _deriveDomainSeparator();
 
         // Validate signature
