@@ -102,7 +102,9 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         uint256 tokenId,
         uint256 amount
     ) internal {
+        // TODO: this does not handle ERC1155
         // https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#IERC721-safeTransferFrom
+        // TODO: check your link above. 2.x is the oldest openzeppelin contracts. Current version is 4.x
         IERC721(collection).safeTransferFrom(from, to, tokenId);
     }
 
