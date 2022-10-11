@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.17;
+
 // Signature-related
 bytes32 constant EIP2098_allButHighestBitMask = (
     0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

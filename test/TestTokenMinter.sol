@@ -1,5 +1,5 @@
 // SPDX-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import {TestERC20} from "../test/TestERC20.sol";
