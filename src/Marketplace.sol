@@ -10,10 +10,10 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import {SignatureVerifier} from "./SignatureVerifier.sol";
+import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 import {EIP_712_DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH} from "./Constants.sol";
 
-contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
+contract Marketplace is IMarketplace, Ownable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
 
@@ -21,11 +21,11 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     bytes4 public constant IID_IERC721 = type(IERC721).interfaceId;
 
     // keeps track of a user's latest nonce
-    mapping(address => uint256) public userCurrentOrderNonce; 
+    mapping(address => uint256) public userCurrentOrderNonce;
     // keeps track of a user's min active nonce
-    mapping(address => uint256) public userMinOrderNonce; 
+    mapping(address => uint256) public userMinOrderNonce;
     // keeps track of nonces that have been cancelled
-    mapping(address => mapping(uint256 => bool)) public _isUserOrderNonceExecutedOrCancelled; 
+    mapping(address => mapping(uint256 => bool)) public _isUserOrderNonceExecutedOrCancelled;
 
     event CancelAllOrders(address indexed user, uint256 newMinNonce);
     event CancelMultipleOrders(address indexed user, uint256[] orderNonces);
@@ -60,8 +60,16 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
 
     function _validateOrder(Orders.Order calldata order) internal view {
         bytes32 DOMAIN_SEPARATOR = _deriveDomainSeparator();
-        bytes32 digest = _deriveEIP712Digest(DOMAIN_SEPARATOR, order.hash());
-        _assertValidSignature(order.signer, digest, order.signature);
+
+        // TODO: add reverts for these instead of string error messages
+        // TODO: add an interface MarketplaceErrors with all the revert errors
+        // just like we had SignatureVerificationErrors
+        require(order.signer != address(0), "Order: Invalid signer");
+        require(order.amount > 0, "Order: Amount cannot be 0");
+        require(
+            SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR),
+            "Signature: Invalid"
+        );
 
         if (order.startTime > block.timestamp) {
             revert OrderNotActive();
@@ -70,7 +78,6 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
             revert OrderExpired();
         }
 
-        // Nonce is valid verification
         if (
             (_isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce])
                 || (order.nonce < userMinOrderNonce[order.signer])
