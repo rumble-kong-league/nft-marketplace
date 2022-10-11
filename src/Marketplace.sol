@@ -24,7 +24,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     mapping(address => uint256) public userCurrentOrderNonce; 
     // keeps track of a user's min active nonce
     mapping(address => uint256) public userMinOrderNonce; 
-    // keeps track of random nonces that have been cancelled
+    // keeps track of nonces that have been cancelled
     mapping(address => mapping(uint256 => bool)) public _isUserOrderNonceExecutedOrCancelled; 
 
     event CancelAllOrders(address indexed user, uint256 newMinNonce);
