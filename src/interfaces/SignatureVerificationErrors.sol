@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 /**
- * @title SignatureVerificationErrors
+ * @title  SignatureVerificationErrors
  * @author 0age
  * @notice SignatureVerificationErrors contains all errors related to signature
  *         verification.

@@ -11,7 +11,7 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {SignatureVerifier} from "./SignatureVerifier.sol";
-import {_EIP_712_DOMAIN_TYPEHASH, _NAME_HASH, _VERSION_HASH} from "./Constants.sol";
+import {EIP_712_DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH} from "./Constants.sol";
 
 contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     using Orders for Orders.Order;
@@ -20,9 +20,12 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     bytes4 public constant IID_IERC1155 = type(IERC1155).interfaceId;
     bytes4 public constant IID_IERC721 = type(IERC721).interfaceId;
 
-    mapping(address => uint256) public userCurrentOrderNonce; // keeps track of a user's latest nonce
-    mapping(address => uint256) public userMinOrderNonce; // keeps track of a user's min active nonce
-    mapping(address => mapping(uint256 => bool)) public _isUserOrderNonceExecutedOrCancelled; // keeps track of random nonces that have been cancelled
+    // keeps track of a user's latest nonce
+    mapping(address => uint256) public userCurrentOrderNonce; 
+    // keeps track of a user's min active nonce
+    mapping(address => uint256) public userMinOrderNonce; 
+    // keeps track of random nonces that have been cancelled
+    mapping(address => mapping(uint256 => bool)) public _isUserOrderNonceExecutedOrCancelled; 
 
     event CancelAllOrders(address indexed user, uint256 newMinNonce);
     event CancelMultipleOrders(address indexed user, uint256[] orderNonces);
@@ -52,23 +55,17 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
         // Update signer order status to true (prevents replay)
         _isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
 
-        // Fulfill order
         _fulfillOrder(order);
     }
 
     function _validateOrder(Orders.Order calldata order) internal view {
-        // Signature verification
-        bytes32 _DOMAIN_SEPARATOR = _deriveDomainSeparator();
-
-        // Validate signature
-        bytes32 digest = _deriveEIP712Digest(_DOMAIN_SEPARATOR, order.hash());
+        bytes32 DOMAIN_SEPARATOR = _deriveDomainSeparator();
+        bytes32 digest = _deriveEIP712Digest(DOMAIN_SEPARATOR, order.hash());
         _assertValidSignature(order.signer, digest, order.signature);
 
-        // Time verification
         if (order.startTime > block.timestamp) {
             revert OrderNotActive();
         }
-
         if (order.endTime < block.timestamp) {
             revert OrderExpired();
         }
@@ -83,17 +80,14 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     }
 
     function _deriveDomainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(_EIP_712_DOMAIN_TYPEHASH, _NAME_HASH, _VERSION_HASH, block.chainid, address(this)));
+        return keccak256(abi.encode(EIP_712_DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH, block.chainid, address(this)));
     }
 
     function _fulfillOrder(Orders.Order calldata order) internal {
         address seller = order.isAsk ? order.signer : msg.sender;
         address buyer = order.isAsk ? msg.sender : order.signer;
 
-        // Transfer ERC20 tokens
         _transferFeesAndFunds(buyer, seller, order.currency, order.price);
-
-        // Transfer ERC721 tokens
         _transferNonFungibleToken(order.collection, seller, buyer, order.tokenId, order.amount);
 
         emit OrderFulfilled(seller, buyer, order.collection, order.tokenId, order.amount, order.currency, order.price);
@@ -129,19 +123,17 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
     // ============ Transfer methods ==============
 
     /**
-     * @notice Transfer ERC721 NFT
+     * @notice Transfer NFTs
      * @param collection address of the token collection
      * @param from address of the sender
      * @param to address of the recipient
      * @param tokenId tokenId
-     * @param amount amount of tokens (1 for ERC721, 1+ for ERC1155)
-     * @dev For ERC721, amount is not used
+     * @param amount amount of tokens
      */
     function _transferNonFungibleToken(address collection, address from, address to, uint256 tokenId, uint256 amount)
         internal
     {
         if (collection.supportsInterface(IID_IERC721)) {
-            // https://docs.openzeppelin.com/contracts/2.x/api/token/erc721#IERC721-safeTransferFrom
             IERC721(collection).safeTransferFrom(from, to, tokenId);
         } else if (collection.supportsInterface(IID_IERC1155)) {
             IERC1155(collection).safeTransferFrom(from, to, tokenId, amount, "");
@@ -157,12 +149,7 @@ contract Marketplace is IMarketplace, Ownable, SignatureVerifier {
      * @param amount amount being transferred (in currency)
      */
     function _transferFeesAndFunds(address from, address to, address currency, uint256 amount) internal {
-        // 1. Protocol fee?
-        // 2. Royalty fee?
-        // 3. Transfer final amount (post-fees) to seller
-        {
-            IERC20(currency).transferFrom(from, to, amount);
-        }
+        IERC20(currency).transferFrom(from, to, amount);
     }
 
     // ============ View methods ==================
