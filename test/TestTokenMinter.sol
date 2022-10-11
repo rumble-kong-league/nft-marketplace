@@ -54,46 +54,28 @@ contract TestTokenMinter is Test {
         mintErc721TokenTo(to, test721_1, id);
     }
 
-    function mintErc721TokenTo(
-        address to,
-        TestERC721 token,
-        uint256 id
-    ) internal {
+    function mintErc721TokenTo(address to, TestERC721 token, uint256 id) internal {
         token.mint(to, id);
     }
-
 
     function mintErc20TokensTo(address to, uint256 amount) internal {
         mintErc20TokensTo(to, token1, amount);
     }
 
-    function mintErc20TokensTo(
-        address to,
-        TestERC20 token,
-        uint256 amount
-    ) internal {
+    function mintErc20TokensTo(address to, TestERC20 token, uint256 amount) internal {
         token.mint(to, amount);
     }
 
-    function mintErc1155TokensTo(
-        address to,
-        uint256 id,
-        uint256 amount
-    ) internal {
+    function mintErc1155TokensTo(address to, uint256 id, uint256 amount) internal {
         mintErc1155TokensTo(to, test1155_1, id, amount);
     }
 
-    function mintErc1155TokensTo(
-        address to,
-        TestERC1155 token,
-        uint256 id,
-        uint256 amount
-    ) internal {
+    function mintErc1155TokensTo(address to, TestERC1155 token, uint256 id, uint256 amount) internal {
         token.mint(to, id, amount);
     }
 
     /**
-    @dev deploy test token contracts
+     * @dev deploy test token contracts
      */
     function _deployTestTokenContracts() internal {
         token1 = new TestERC20();
@@ -114,8 +96,8 @@ contract TestTokenMinter is Test {
     }
 
     /**
-    @dev allocate amount of each token, 1 of each 721, and 1, 5, and 10 of respective 1155s 
-    */
+     * @dev allocate amount of each token, 1 of each 721, and 1, 5, and 10 of respective 1155s
+     */
     function allocateTokensAndApprovals(address _to, address _toApprove, uint128 _amount) internal {
         vm.deal(_to, _amount);
         for (uint256 i = 0; i < erc20s.length; ++i) {
@@ -134,15 +116,7 @@ contract TestTokenMinter is Test {
             erc721s[i].setApprovalForAll(address(toApprove), true);
         }
         vm.stopPrank();
-        emit log_named_address(
-            "Owner proxy approved for all tokens from",
-            _owner
-        );
-        emit log_named_address(
-            "Consideration approved for all tokens from",
-            _owner
-        );
+        emit log_named_address("Owner proxy approved for all tokens from", _owner);
+        emit log_named_address("Consideration approved for all tokens from", _owner);
     }
-
-
 }

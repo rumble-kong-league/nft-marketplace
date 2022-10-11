@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { EIP1271Interface } from "src/interfaces/EIP1271Interface.sol";
+import {EIP1271Interface} from "src/interfaces/EIP1271Interface.sol";
 
-import {
-    SignatureVerificationErrors
-} from "src/interfaces/SignatureVerificationErrors.sol";
+import {SignatureVerificationErrors} from "src/interfaces/SignatureVerificationErrors.sol";
 
 import "src/Constants.sol";
 
@@ -27,11 +25,7 @@ contract SignatureVerifier is SignatureVerificationErrors {
      * @param signature A signature from the signer indicating that the order
      *                  has been approved.
      */
-    function _assertValidSignature(
-        address signer,
-        bytes32 digest,
-        bytes memory signature
-    ) public view {
+    function _assertValidSignature(address signer, bytes32 digest, bytes memory signature) public view {
         // Declare r, s, and v signature parameters.
         bytes32 r;
         bytes32 s;
@@ -84,15 +78,9 @@ contract SignatureVerifier is SignatureVerificationErrors {
      *                  and the order hash.
      * @param signature A signature (or other data) used to validate the digest.
      */
-    function _assertValidEIP1271Signature(
-        address signer,
-        bytes32 digest,
-        bytes memory signature
-    ) internal view {
-        if (
-            EIP1271Interface(signer).isValidSignature(digest, signature) !=
-            EIP1271Interface.isValidSignature.selector
-        ) {
+    function _assertValidEIP1271Signature(address signer, bytes32 digest, bytes memory signature) internal view {
+        if (EIP1271Interface(signer).isValidSignature(digest, signature) != EIP1271Interface.isValidSignature.selector)
+        {
             revert InvalidSigner();
         }
     }
@@ -106,11 +94,7 @@ contract SignatureVerifier is SignatureVerificationErrors {
      *
      * @return value The hash.
      */
-    function _deriveEIP712Digest(bytes32 domainSeparator, bytes32 orderHash)
-        public
-        pure
-        returns (bytes32 value)
-    {
+    function _deriveEIP712Digest(bytes32 domainSeparator, bytes32 orderHash) public pure returns (bytes32 value) {
         // Leverage scratch space to perform an efficient hash.
         assembly {
             // Place the EIP-712 prefix at the start of scratch space.

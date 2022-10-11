@@ -2,13 +2,11 @@
 pragma solidity ^0.8.17;
 
 library Orders {
-    
     bytes32 internal constant ORDER_TYPEHASH = keccak256(
-      "Order(bool isAsk,address signer,bytes signature,uint256 nonce,uint256 startTime,uint256 endTime,address collection,uint256 tokenId,uint256 amount,uint256 price,address currency,bytes params)"
+        "Order(bool isAsk,address signer,bytes signature,uint256 nonce,uint256 startTime,uint256 endTime,address collection,uint256 tokenId,uint256 amount,uint256 price,address currency,bytes params)"
     );
-    bytes32 internal constant EIP712DOMAIN_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-    );
+    bytes32 internal constant EIP712DOMAIN_TYPEHASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     struct Order {
         bool isAsk; // false if create an offer
@@ -25,27 +23,22 @@ library Orders {
         bytes params; // random params that can be used for different purposes
     }
 
-    function hash(Orders.Order memory order)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return
-            keccak256(
-                abi.encode(
-                    ORDER_TYPEHASH,
-                    order.isAsk,
-                    order.signer,
-                    order.nonce,
-                    order.startTime,
-                    order.endTime,
-                    order.collection,
-                    order.tokenId,
-                    order.amount,
-                    order.price,
-                    order.currency,
-                    keccak256(order.params)
-                )
-            );
+    function hash(Orders.Order memory order) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                ORDER_TYPEHASH,
+                order.isAsk,
+                order.signer,
+                order.nonce,
+                order.startTime,
+                order.endTime,
+                order.collection,
+                order.tokenId,
+                order.amount,
+                order.price,
+                order.currency,
+                keccak256(order.params)
+            )
+        );
     }
 }
