@@ -20,6 +20,7 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // 1. generate new SALT
 // 2. increment VERSION
 
+// TODO: write tests for signing. Both from contract and from user
 contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
