@@ -13,14 +13,12 @@ import "./interfaces/IMarketplaceErrors.sol";
 import "./interfaces/IMarketplace.sol";
 import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 
-
 // !!! When deploying on a new chain do:
 // 1. generate new SALT
 // 2. use new CHAIN_ID
 // !!! When deploying new version do:
 // 1. generate new SALT
 // 2. increment VERSION
-
 
 // How To Improve This Contract
 // 1. Batch transfer a combination of 721s and 1155s. This
@@ -31,7 +29,7 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // Use onlyOwner modifier from the Ownable.
 // This also requires PROTOCOL_FEE_RECEIVER address. This is only settable by
 // owner. So you will need to use onlyOwner here as well.
-// You also need to implement the actual logic of taking the fee in 
+// You also need to implement the actual logic of taking the fee in
 // tranferFeesAndFunds.
 
 // TODO: make sure that `forge build` compiles all the contracts and that
@@ -64,18 +62,26 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     event CancelAllOrders(address indexed user, uint256 indexed newMinNonce);
     event CancelMultipleOrders(address indexed user, uint256[] indexed orderNonces);
     event OrderFulfilled(
-        address indexed from, address indexed to, address indexed collection, uint256 tokenId, uint256 amount, address currency, uint256 price
+        address indexed from,
+        address indexed to,
+        address indexed collection,
+        uint256 tokenId,
+        uint256 amount,
+        address currency,
+        uint256 price
     );
 
     constructor() {
-        DOMAIN_SEPARATOR = keccak256(abi.encode(
-            0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
-            0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes("RKL Marketplace"))
-            0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1"))
-            ETHEREUM_CHAIN_ID,                                                  // chain id
-            address(this),                                                      // verifying contract
-            SALT                                                                // salt
-        ));
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
+                0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes("RKL Marketplace"))
+                0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1"))
+                ETHEREUM_CHAIN_ID,
+                address(this),
+                SALT
+            )
+        );
     }
 
     /**
@@ -98,14 +104,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         if (order.signer == address(0)) {
             revert InvalidSigner();
         }
-        if (!SignatureChecker.verify(
-            order.hash(),
-            order.signer,
-            order.v,
-            order.r,
-            order.s,
-            DOMAIN_SEPARATOR
-        )) {
+        if (!SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR)) {
             revert InvalidSignature();
         }
         if (order.startTime > block.timestamp) {
