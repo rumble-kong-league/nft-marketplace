@@ -13,6 +13,13 @@ import "./interfaces/IMarketplaceErrors.sol";
 import "./interfaces/IMarketplace.sol";
 import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 
+// !!! When deploying on a new chain do:
+// 1. generate new SALT
+// 2. use new CHAIN_ID
+// !!! When deploying new version do:
+// 1. generate new SALT
+// 2. increment VERSION
+
 contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
