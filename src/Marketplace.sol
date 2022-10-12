@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./interfaces/IMarketplace.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,35 +9,50 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+import "./interfaces/IMarketplaceErrors.sol";
+import "./interfaces/IMarketplace.sol";
 import {SignatureChecker} from "./libraries/SignatureChecker.sol";
-import {EIP_712_DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH} from "./Constants.sol";
 
-contract Marketplace is IMarketplace, Ownable {
+contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
 
-    bytes4 public constant IID_IERC1155 = type(IERC1155).interfaceId;
-    bytes4 public constant IID_IERC721 = type(IERC721).interfaceId;
+    bytes4 private constant IID_IERC1155 = type(IERC1155).interfaceId;
+    bytes4 private constant IID_IERC721 = type(IERC721).interfaceId;
+
+    uint256 constant ETHEREUM_CHAIN_ID = 1;
+    // TODO: check chain id on-chain, because providers may not enforce chain id check
+    // https://medium.com/metamask/eip712-is-coming-what-to-expect-and-how-to-use-it-bb92fd1a7a26
+    // https://github.com/harmony-one/harmony/issues/4129
+    bytes32 public constant SALT = 0xcc6bba07dc72ccc06230832cb75198fc8dc757cf7b7e10f1406cbd6867ab4a34;
+    // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
+    // string constant NAME = "RKL Marketplace";
+    // string constant VERSION = "1";
+    bytes32 public immutable DOMAIN_SEPARATOR;
 
     // keeps track of a user's latest nonce
-    mapping(address => uint256) public userCurrentOrderNonce;
+    mapping(address => uint256) private userCurrentOrderNonce;
     // keeps track of a user's min active nonce
-    mapping(address => uint256) public userMinOrderNonce;
+    mapping(address => uint256) private userMinOrderNonce;
     // keeps track of nonces that have been cancelled
-    mapping(address => mapping(uint256 => bool)) public _isUserOrderNonceExecutedOrCancelled;
+    mapping(address => mapping(uint256 => bool)) private _isUserOrderNonceExecutedOrCancelled;
 
-    event CancelAllOrders(address indexed user, uint256 newMinNonce);
-    event CancelMultipleOrders(address indexed user, uint256[] orderNonces);
+    event CancelAllOrders(address indexed user, uint256 indexed newMinNonce);
+    event CancelMultipleOrders(address indexed user, uint256[] indexed orderNonces);
     event OrderFulfilled(
-        address from, address to, address collection, uint256 tokenId, uint256 amount, address currency, uint256 price
+        address indexed from, address indexed to, address indexed collection, uint256 tokenId, uint256 amount, address currency, uint256 price
     );
 
-    error InvalidNonce();
-    error OrderExpired();
-    error OrderNotActive();
-    error InvalidTokenAmount();
-
-    constructor() {}
+    constructor() {
+        DOMAIN_SEPARATOR = keccak256(abi.encode(
+            0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
+            0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes(NAME))
+            0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes(VERSION))
+            ETHEREUM_CHAIN_ID,
+            address(this),
+            SALT
+        ));
+    }
 
     // ============ Order methods ==================
 
@@ -59,13 +73,12 @@ contract Marketplace is IMarketplace, Ownable {
     }
 
     function _validateOrder(Orders.Order calldata order) internal view {
-        bytes32 DOMAIN_SEPARATOR = _deriveDomainSeparator();
-
-        // TODO: add reverts for these instead of string error messages
-        // TODO: add an interface MarketplaceErrors with all the revert errors
-        // just like we had SignatureVerificationErrors
-        require(order.signer != address(0), "Order: Invalid signer");
-        require(order.amount > 0, "Order: Amount cannot be 0");
+        // TODO: think if there is anything else we need to check here in terms of
+        // order validity
+        if (order.signer == address(0)) {
+            revert InvalidSigner();
+        }
+        // TODO: add custom error for this
         require(
             SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR),
             "Signature: Invalid"
@@ -84,10 +97,6 @@ contract Marketplace is IMarketplace, Ownable {
         ) {
             revert InvalidNonce();
         }
-    }
-
-    function _deriveDomainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(EIP_712_DOMAIN_TYPEHASH, NAME_HASH, VERSION_HASH, block.chainid, address(this)));
     }
 
     function _fulfillOrder(Orders.Order calldata order) internal {
