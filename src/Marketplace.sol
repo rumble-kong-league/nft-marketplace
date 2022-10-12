@@ -13,6 +13,7 @@ import "./interfaces/IMarketplaceErrors.sol";
 import "./interfaces/IMarketplace.sol";
 import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 
+
 // !!! When deploying on a new chain do:
 // 1. generate new SALT
 // 2. use new CHAIN_ID
@@ -20,7 +21,24 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // 1. generate new SALT
 // 2. increment VERSION
 
+
+// How To Improve This Contract
+// 1. Batch transfer a combination of 721s and 1155s. This
+// would utilise safeBatchTransferFrom on the 1155 side.
+
+// TODO: implement fees on each sale. This would be a percentage of the sale.
+// You need to add a variable PROTOCOL_FEE that is settable by the owner.
+// Use onlyOwner modifier from the Ownable.
+// This also requires PROTOCOL_FEE_RECEIVER address. This is only settable by
+// owner. So you will need to use onlyOwner here as well.
+// You also need to implement the actual logic of taking the fee in 
+// tranferFeesAndFunds.
+
+// TODO: make sure that `forge build` compiles all the contracts and that
+// `forge test` runs all the tests. We should have 100% test coverage.
+
 // TODO: write tests for signing. Both from contract and from user
+
 contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
@@ -34,13 +52,11 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     // https://github.com/harmony-one/harmony/issues/4129
     bytes32 public constant SALT = 0xcc6bba07dc72ccc06230832cb75198fc8dc757cf7b7e10f1406cbd6867ab4a34;
     // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
-    // string constant NAME = "RKL Marketplace";
-    // string constant VERSION = "1";
     bytes32 public immutable DOMAIN_SEPARATOR;
 
-    // keeps track of a user's latest nonce
+    // keeps track of user's latest nonce
     mapping(address => uint256) private userCurrentOrderNonce;
-    // keeps track of a user's min active nonce
+    // keeps track of user's min active nonce
     mapping(address => uint256) private userMinOrderNonce;
     // keeps track of nonces that have been cancelled
     mapping(address => mapping(uint256 => bool)) private _isUserOrderNonceExecutedOrCancelled;
@@ -54,15 +70,13 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     constructor() {
         DOMAIN_SEPARATOR = keccak256(abi.encode(
             0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
-            0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes(NAME))
-            0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes(VERSION))
-            ETHEREUM_CHAIN_ID,
-            address(this),
-            SALT
+            0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes("RKL Marketplace"))
+            0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1"))
+            ETHEREUM_CHAIN_ID,                                                  // chain id
+            address(this),                                                      // verifying contract
+            SALT                                                                // salt
         ));
     }
-
-    // ============ Order methods ==================
 
     /**
      * @notice Fulfills an order stored off chain. Call must be made by
@@ -73,10 +87,8 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
      */
     function fulfillOrder(Orders.Order calldata order) external {
         _validateOrder(order);
-
         // Update signer order status to true (prevents replay)
         _isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
-
         _fulfillOrder(order);
     }
 
@@ -86,19 +98,22 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         if (order.signer == address(0)) {
             revert InvalidSigner();
         }
-        // TODO: add custom error for this
-        require(
-            SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR),
-            "Signature: Invalid"
-        );
-
+        if (!SignatureChecker.verify(
+            order.hash(),
+            order.signer,
+            order.v,
+            order.r,
+            order.s,
+            DOMAIN_SEPARATOR
+        )) {
+            revert InvalidSignature();
+        }
         if (order.startTime > block.timestamp) {
             revert OrderNotActive();
         }
         if (order.endTime < block.timestamp) {
             revert OrderExpired();
         }
-
         if (
             (_isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce])
                 || (order.nonce < userMinOrderNonce[order.signer])
@@ -110,10 +125,8 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     function _fulfillOrder(Orders.Order calldata order) internal {
         address seller = order.isAsk ? order.signer : msg.sender;
         address buyer = order.isAsk ? msg.sender : order.signer;
-
         _transferFeesAndFunds(buyer, seller, order.currency, order.price);
         _transferNonFungibleToken(order.collection, seller, buyer, order.tokenId, order.amount);
-
         emit OrderFulfilled(seller, buyer, order.collection, order.tokenId, order.amount, order.currency, order.price);
     }
 
@@ -125,26 +138,21 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         require(minNonce > userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
         require(minNonce < userMinOrderNonce[msg.sender] + 500000, "Cancel: Cannot cancel more orders");
         userMinOrderNonce[msg.sender] = minNonce;
-
         emit CancelAllOrders(msg.sender, minNonce);
     }
 
     /**
-     * @notice Cancel maker orders
+     * @notice Cancel multiple orders
      * @param orderNonces array of order nonces
      */
     function cancelMultipleOrders(uint256[] calldata orderNonces) external {
         require(orderNonces.length > 0, "Cancel: Cannot be empty");
-
         for (uint256 i = 0; i < orderNonces.length; i++) {
             require(orderNonces[i] >= userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
             _isUserOrderNonceExecutedOrCancelled[msg.sender][orderNonces[i]] = true;
         }
-
         emit CancelMultipleOrders(msg.sender, orderNonces);
     }
-
-    // ============ Transfer methods ==============
 
     /**
      * @notice Transfer NFTs
@@ -175,8 +183,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     function _transferFeesAndFunds(address from, address to, address currency, uint256 amount) internal {
         IERC20(currency).transferFrom(from, to, amount);
     }
-
-    // ============ View methods ==================
 
     function getCurrentNonceForAddress(address add) public view returns (uint256) {
         return userCurrentOrderNonce[add];
