@@ -20,6 +20,9 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // 1. generate new SALT
 // 2. increment VERSION
 
+// How To Improve This Contract
+// 1. Batch transfer a combination of 721s and 1155s. This
+// would utilise safeBatchTransferFrom on the 1155 side.
 contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
@@ -27,39 +30,34 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     bytes4 private constant IID_IERC1155 = type(IERC1155).interfaceId;
     bytes4 private constant IID_IERC721 = type(IERC721).interfaceId;
 
+    uint256 private PROTOCOL_FEE; // 10000 = 100%
+    address private PROTOCOL_FEE_RECIEVER;
+
     uint256 constant ETHEREUM_CHAIN_ID = 1;
     
     bytes32 public constant SALT = 0xcc6bba07dc72ccc06230832cb75198fc8dc757cf7b7e10f1406cbd6867ab4a34;
     // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
-    // string constant NAME = "RKL Marketplace";
-    // string constant VERSION = "1";
     bytes32 public immutable DOMAIN_SEPARATOR;
 
-    // keeps track of a user's latest nonce
+    // keeps track of user's latest nonce
     mapping(address => uint256) private userCurrentOrderNonce;
-    // keeps track of a user's min active nonce
+    // keeps track of user's min active nonce
     mapping(address => uint256) private userMinOrderNonce;
     // keeps track of nonces that have been cancelled
     mapping(address => mapping(uint256 => bool)) private _isUserOrderNonceExecutedOrCancelled;
 
-    event CancelAllOrdersForUser(address indexed user, uint256 indexed newMinNonce);
-    event CancelMultipleOrders(address indexed user, uint256[] indexed orderNonces);
-    event OrderFulfilled(
-        address indexed from, address indexed to, address indexed collection, uint256 tokenId, uint256 amount, address currency, uint256 price
-    );
-
     constructor() {
-        DOMAIN_SEPARATOR = keccak256(abi.encode(
-            0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
-            0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes(NAME))
-            0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes(VERSION))
-            ETHEREUM_CHAIN_ID,
-            address(this),
-            SALT
-        ));
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
+                0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes("RKL Marketplace"))
+                0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1"))
+                ETHEREUM_CHAIN_ID,
+                address(this),
+                SALT
+            )
+        );
     }
-
-    // ============ Order methods ==================
 
     /**
      * @notice Fulfills an order stored off chain. Call must be made by
@@ -70,10 +68,8 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
      */
     function fulfillOrder(Orders.Order calldata order) external {
         _validateOrder(order);
-
         // Update signer order status to true (prevents replay)
         _isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
-
         _fulfillOrder(order);
     }
 
@@ -85,7 +81,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         if (order.signer == address(0)) {
             revert InvalidSigner();
         }
-
         SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR);
 
         if (order.startTime > block.timestamp) {
@@ -95,7 +90,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         if (order.endTime < block.timestamp) {
             revert OrderExpired();
         }
-
         if (
             (_isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce])
                 || (order.nonce < userMinOrderNonce[order.signer])
@@ -109,7 +103,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
 
         _transferFeesAndFunds(buyer, seller, order.currency, order.price);
         _transferNonFungibleToken(order.collection, seller, buyer, order.tokenId, order.amount);
-
         emit OrderFulfilled(seller, buyer, order.collection, order.tokenId, order.amount, order.currency, order.price);
     }
 
@@ -131,16 +124,12 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
      */
     function cancelMultipleOrders(uint256[] calldata orderNonces) external {
         require(orderNonces.length > 0, "Cancel: Cannot be empty");
-
         for (uint256 i = 0; i < orderNonces.length; i++) {
             require(orderNonces[i] >= userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
             _isUserOrderNonceExecutedOrCancelled[msg.sender][orderNonces[i]] = true;
         }
-
         emit CancelMultipleOrders(msg.sender, orderNonces);
     }
-
-    // ============ Transfer methods ==============
 
     /**
      * @notice Transfer NFTs
@@ -162,17 +151,27 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         }
     }
 
-    /**
-     * @notice Transfer fees and funds to royalty recipient, protocol, and seller
-     * @param from sender of the funds
-     * @param to seller's recipient
-     * @param amount amount being transferred (in currency)
-     */
     function _transferFeesAndFunds(address from, address to, address currency, uint256 amount) internal {
-        IERC20(currency).transferFrom(from, to, amount);
+        uint256 finalAmount = amount;
+        uint256 protocolFeeAmount = (PROTOCOL_FEE * amount) / 10000;
+
+        // Check if the protocol fee is different than 0 for this strategy
+        if ((PROTOCOL_FEE_RECIEVER != address(0)) && (protocolFeeAmount != 0)) {
+            IERC20(currency).transferFrom(from, PROTOCOL_FEE_RECIEVER, protocolFeeAmount);
+            finalAmount -= protocolFeeAmount;
+        } 
+
+        // Transfer payment
+        IERC20(currency).transferFrom(from, to, finalAmount);
     }
 
-    // ============ View methods ==================
+    function setProtocolFeeReciever(address protocolFeeReciever) external onlyOwner {
+        PROTOCOL_FEE_RECIEVER = protocolFeeReciever;
+    }
+
+    function setProtocolFee(uint256 protocolFee) external onlyOwner {
+        PROTOCOL_FEE = protocolFee;
+    }
 
     function getCurrentNonceForAddress(address add) public view returns (uint256) {
         return userCurrentOrderNonce[add];

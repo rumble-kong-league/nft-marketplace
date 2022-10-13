@@ -33,6 +33,7 @@ contract MarketplaceTest is TestTokenMinter {
     function setUp() public override {
         super.setUp();
         marketplace = new Marketplace();
+        marketplace.setProtocolFee(0);
         vm.chainId(ETHEREUM_CHAIN_ID);
     }
 
@@ -215,6 +216,17 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(order);
     }
 
+    function testInvalidSigner() public {
+        Orders.Order memory order = setUpBobAskERC721Order();
+        order.r = "";
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+        vm.expectRevert(IMarketplaceErrors.InvalidSigner.selector);
+        marketplace.fulfillOrder(order);
+
+    }
+
     function testOrderExpired() public {
         Orders.Order memory order = setUpBobAskERC721Order();
         order.endTime = FAR_PAST_TIMESTAMP;
@@ -237,6 +249,75 @@ contract MarketplaceTest is TestTokenMinter {
         // We expect order not to be active because start time is in the future
         vm.expectRevert(IMarketplaceErrors.OrderNotActive.selector);
         marketplace.fulfillOrder(order);
+    }
+
+    function testProtocolFee() public {
+        // Set protocol fee to 50%
+        marketplace.setProtocolFee(5000); 
+
+        // Random address as protocol fee reciever
+        address protocolFeeReciever = 0xda84BEe8814F024B81754cbDe9c603440cF92D0B;
+        marketplace.setProtocolFeeReciever(protocolFeeReciever);
+
+        Orders.Order memory order = setUpBobAskERC721Order();
+
+        // We expect an order fulfilled emit
+        vm.expectEmit(true, true, true, true);
+        emit OrderFulfilled(bob, alice, address(test721_1), 0, 1, address(token1), 20);
+
+        // Alice fulfills bobs ask order
+        vm.prank(alice);
+        marketplace.fulfillOrder(order);
+
+        assertEq(test721_1.balanceOf(alice), 1);
+        assertEq(test721_1.balanceOf(bob), 0);
+        assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT - DEFAULT_TOKEN_PRICE);
+        assertEq(token1.balanceOf(bob), STARTING_ERC20_AMOUNT + DEFAULT_TOKEN_PRICE / 2);
+        assertEq(token1.balanceOf(protocolFeeReciever), order.price / 2);
+    }
+
+    function testProtocolFeeNullAddress() public {
+        // Set protocol fee to 50%
+        marketplace.setProtocolFee(5000); 
+
+        // Null address as protocol fee reciever
+        address protocolFeeReciever = address(0x0);
+        marketplace.setProtocolFeeReciever(protocolFeeReciever);
+
+        Orders.Order memory order = setUpBobAskERC721Order();
+
+        // Alice fulfills bobs ask order
+        vm.prank(alice);
+        marketplace.fulfillOrder(order);
+
+        // This assert is the same as if there were no fees
+        assertBobAskERC721OrderFulfilled();
+    }
+
+    function testFulfillAskERC721Order1271Signer() public {
+        Orders.Order memory order = setUpBobAskERC721Order();
+
+        // Send ERC721 to ERC1271 contract
+        test721_1.safeTransferFrom(bob, address(test1271_1), DEFAULT_TOKEN_ID);
+        order.signer = address(test1271_1);
+
+        // ERC1271 must approve marketplace
+        vm.prank(address(test1271_1));
+        test721_1.approve(address(marketplace), DEFAULT_TOKEN_ID);
+
+        // We expect an order fulfilled emit
+        vm.expectEmit(true, true, true, true);
+        emit OrderFulfilled(address(test1271_1), alice, address(test721_1), 0, 1, address(token1), 20);
+
+        // Alice fulfills the order
+        vm.prank(alice);
+        marketplace.fulfillOrder(order);
+
+        // Assert that alice got the ERC721 token and the signer contract the ERC20 tokens
+        assertEq(test721_1.balanceOf(alice), 1);
+        assertEq(test721_1.balanceOf(bob), 0);
+        assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT - DEFAULT_TOKEN_PRICE);
+        assertEq(token1.balanceOf(address(test1271_1)), DEFAULT_TOKEN_PRICE);
     }
 
     function assertInitialTokenBalances(address seller, address buyer) internal {
@@ -277,7 +358,6 @@ contract MarketplaceTest is TestTokenMinter {
 
         return order;
     }
-
 
     function setUpBobBidERC721Order() internal returns (Orders.Order memory) {
         // Alice mints an ERC721 token

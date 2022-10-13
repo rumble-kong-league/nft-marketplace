@@ -10,7 +10,7 @@ library Orders {
 
     struct Order {
         bool isAsk; // false if bid
-        address signer; // user wallet address
+        address signer; // the signer address
         uint256 nonce; // used for cancelling orders, should be unique
         uint256 startTime; // timestamp after which order is active
         uint256 endTime; // timestamp after which order is no longer active
