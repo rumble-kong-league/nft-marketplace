@@ -9,6 +9,10 @@ import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
  * @notice This library allows verification of signatures for both EOAs and contracts.
  */
 library SignatureChecker {
+    error InvalidParameterS();
+    error InvalidParameterV();
+    error InvalidSigner();
+    
     /**
      * @notice Recovers the signer of a signature (for EOA)
      * @param hash the hash containing the signed mesage
@@ -19,16 +23,20 @@ library SignatureChecker {
     function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal pure returns (address) {
         // https://ethereum.stackexchange.com/questions/83174/is-it-best-practice-to-check-signature-malleability-in-ecrecover
         // https://crypto.iacr.org/2019/affevents/wac/medias/Heninger-BiasedNonceSense.pdf
-        require(
-            uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
-            "Signature: Invalid s parameter"
-        );
+        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            revert InvalidParameterS();
+        }
 
-        require(v == 27 || v == 28, "Signature: Invalid v parameter");
+        if (v != 27 && v != 28) {
+            revert InvalidParameterV();
+        }
 
         // If the signature is valid (and not malleable), return the signer address
         address signer = ecrecover(hash, v, r, s);
-        require(signer != address(0), "Signature: Invalid signer");
+
+        if (signer == address(0)) {
+            revert InvalidSigner();
+        }
 
         return signer;
     }

@@ -6,6 +6,8 @@ interface IMarketplaceErrors {
     error InvalidNonce();
     error OrderExpired();
     error OrderNotActive();
-    error InvalidTokenAmount();
+    error InterfaceNotSupported();
     error InvalidSigner();
+    error InvalidChain();
+    error InvalidCurrencyInterface();
 }
