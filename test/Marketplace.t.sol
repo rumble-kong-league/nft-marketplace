@@ -104,16 +104,6 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(order);
     }
 
-    function testInvalidOrderSignature() public {
-        Orders.Order memory order = setUpBobAskERC1155Order();
-        order.r = order.s;
-        
-        // Alice fulfills bobs order which fails due to an invalid signer
-        vm.prank(alice);
-        vm.expectRevert(SignatureChecker.InvalidSigner.selector);
-        marketplace.fulfillOrder(order);
-    }
-
     function testInvalidParamaterS() public {
         Orders.Order memory order = setUpBobAskERC1155Order();
         order.s = bytes32(uint256(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0 + 1));
