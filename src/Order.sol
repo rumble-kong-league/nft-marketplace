@@ -21,6 +21,8 @@ library Orders {
         uint8 v; // v: parameter (27 or 28)
         bytes32 r; // r: parameter
         bytes32 s; // s: parameter
+        bytes32 root;
+        bytes32[] proof;
     }
 
     function hash(Orders.Order memory order) internal pure returns (bytes32) {
