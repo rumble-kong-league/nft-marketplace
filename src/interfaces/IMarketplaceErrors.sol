@@ -19,4 +19,10 @@ interface IMarketplaceErrors {
 
     /// @notice Emitted when theres an attempt to fulfill an order on a chain different than the one hardcoded into the contract
     error InvalidChain();
+
+    /// @notice Emitted when theres an attempt to fulfill an order with a signature that doesnt match the signer
+    error InvalidSignature();
+
+    /// @notice Emitted when an order's merkle proof is invalid
+    error InvalidMerkleProof();
 }
