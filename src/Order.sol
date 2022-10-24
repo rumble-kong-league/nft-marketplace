@@ -5,8 +5,6 @@ library Orders {
     bytes32 internal constant ORDER_TYPEHASH = keccak256(
         "Order(bool isAsk,address signer,uint256 nonce,uint256 startTime,uint256 endTime,address collection,uint256 tokenId,uint256 amount,uint256 price,address currency)"
     );
-    bytes32 internal constant EIP712DOMAIN_TYPEHASH =
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     struct Order {
         bool isAsk; // false if bid
