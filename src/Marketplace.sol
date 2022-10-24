@@ -100,11 +100,13 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     }
 
     /**
-     * @notice Cancel all orders below a certain once for a user
+     * @notice Cancel all orders below a certain nonce for a user
      * @param minNonce The nonce below which orders should be cancelled
      */
     function cancelAllOrdersForSender(uint256 minNonce) external {
         require(minNonce > userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
+        // so that the user does not input a nonce that is type(uint256).max and bricks themselves
+        // from ever trading with this contract again
         require(minNonce < userMinOrderNonce[msg.sender] + 500000, "Cancel: Cannot cancel more orders");
         userMinOrderNonce[msg.sender] = minNonce;
 
