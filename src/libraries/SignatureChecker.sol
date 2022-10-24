@@ -12,7 +12,7 @@ library SignatureChecker {
     error InvalidParameterS();
     error InvalidParameterV();
     error InvalidSigner();
-    
+
     /**
      * @notice Recovers the signer of a signature (for EOA)
      * @param hash the hash containing the signed mesage

@@ -8,7 +8,6 @@ import "../Order.sol";
 /// @author nazariyv
 /// @notice Marketplace interface for the RKL Marketplace
 interface IMarketplace {
-
     /// @notice Emitted when all orders below a certain nonce are cancelled for a user
     /// @param user The address for which the orders have been cancelled
     /// @param newMinNonce The nonce below which all orders are cancelled for the user

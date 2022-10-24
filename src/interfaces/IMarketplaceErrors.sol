@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-
 interface IMarketplaceErrors {
     /// @notice Emitted when theres an attempt to fulfill an order with an invalid nonce
     error InvalidNonce();

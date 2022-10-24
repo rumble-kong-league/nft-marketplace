@@ -16,12 +16,10 @@ contract TestERC1271 is IERC1271, IERC721Receiver {
         return MAGICVALUE;
     }
 
-    function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) external returns (bytes4) {
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
+        external
+        returns (bytes4)
+    {
         return this.onERC721Received.selector;
     }
 }

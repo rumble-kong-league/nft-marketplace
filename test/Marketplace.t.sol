@@ -26,7 +26,13 @@ contract MarketplaceTest is TestTokenMinter {
     uint256 DEFAULT_TOKEN_AMOUNT = 1;
 
     event OrderFulfilled(
-        address indexed from, address indexed to, address indexed collection, uint256 tokenId, uint256 amount, address currency, uint256 price
+        address indexed from,
+        address indexed to,
+        address indexed collection,
+        uint256 tokenId,
+        uint256 amount,
+        address currency,
+        uint256 price
     );
     event Approval(address owner, address spender, uint256 value);
 
@@ -76,7 +82,6 @@ contract MarketplaceTest is TestTokenMinter {
         // Assert that alice got the ERC721 token and bob the ERC20 tokens
         assertBobBidERC721OrderFulfilled();
         assertEq(marketplace.getIsUserOrderNonceExecutedOrCanceled(bob, DEFAULT_TOKEN_ID), true);
-
     }
 
     function testFulfillAskERC1155Order() public {
@@ -107,7 +112,7 @@ contract MarketplaceTest is TestTokenMinter {
     function testInvalidParamaterS() public {
         Orders.Order memory order = setUpBobAskERC1155Order();
         order.s = bytes32(uint256(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0 + 1));
-        
+
         // Alice fulfills bobs order which fails due to an invalid signer
         vm.prank(alice);
         vm.expectRevert(SignatureChecker.InvalidParameterS.selector);
@@ -117,7 +122,7 @@ contract MarketplaceTest is TestTokenMinter {
     function testInvalidParamaterV() public {
         Orders.Order memory order = setUpBobAskERC1155Order();
         order.v = 3;
-        
+
         // Alice fulfills bobs order which fails due to an invalid signer
         vm.prank(alice);
         vm.expectRevert(SignatureChecker.InvalidParameterV.selector);
@@ -128,20 +133,20 @@ contract MarketplaceTest is TestTokenMinter {
         Orders.Order memory order = setUpBobAskERC1155Order();
 
         // Set address to a random collection that is not ERC20 or ERC1155
-        order.collection = address(0x9df89266e11A6e018A22d3f542fBF54a4Ef56dd5); 
-        
+        order.collection = address(0x9df89266e11A6e018A22d3f542fBF54a4Ef56dd5);
+
         // Alice fulfills bobs order which fails due to an invalid signer
         vm.prank(alice);
         vm.expectRevert(IMarketplaceErrors.InterfaceNotSupported.selector);
         marketplace.fulfillOrder(order);
     }
-    
+
     function testInvalidChain() public {
         // Set chainId to a different value
         vm.chainId(2);
 
         Orders.Order memory order = setUpBobAskERC1155Order();
-        
+
         // Alice fulfills bobs order which fails due to an invalid signer
         vm.prank(alice);
         vm.expectRevert(IMarketplaceErrors.InvalidChain.selector);
@@ -149,9 +154,8 @@ contract MarketplaceTest is TestTokenMinter {
 
         // Set chainId back to default value
         vm.chainId(ETHEREUM_CHAIN_ID);
-        
     }
-    
+
     function testCancelAllOrdersForSender() public {
         Orders.Order memory order = setUpBobAskERC721Order();
 
@@ -170,7 +174,6 @@ contract MarketplaceTest is TestTokenMinter {
     }
 
     function testCancelAllOrdersForSenderBelowCurrent() public {
-
         Orders.Order memory order = setUpBobAskERC721Order();
         order.nonce = 11;
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -186,7 +189,6 @@ contract MarketplaceTest is TestTokenMinter {
         // Order should still be successfully fulfilled
         assertBobAskERC721OrderFulfilled();
         assertEq(marketplace.getIsUserOrderNonceExecutedOrCanceled(bob, 11), true);
-
     }
 
     function testCancelMultipleOrders() public {
@@ -199,7 +201,7 @@ contract MarketplaceTest is TestTokenMinter {
         noncesToCancel[0] = 10;
         vm.prank(bob);
         marketplace.cancelMultipleOrders(noncesToCancel);
-        
+
         // We expect the orders nonce to be invalid
         vm.expectRevert(IMarketplaceErrors.InvalidNonce.selector);
         vm.prank(alice);
@@ -214,7 +216,6 @@ contract MarketplaceTest is TestTokenMinter {
         vm.prank(alice);
         vm.expectRevert(IMarketplaceErrors.InvalidSigner.selector);
         marketplace.fulfillOrder(order);
-
     }
 
     function testOrderExpired() public {
@@ -243,7 +244,7 @@ contract MarketplaceTest is TestTokenMinter {
 
     function testProtocolFee() public {
         // Set protocol fee to 50%
-        marketplace.setProtocolFee(5000); 
+        marketplace.setProtocolFee(5000);
 
         // Random address as protocol fee reciever
         address protocolFeeReciever = 0xda84BEe8814F024B81754cbDe9c603440cF92D0B;
@@ -268,7 +269,7 @@ contract MarketplaceTest is TestTokenMinter {
 
     function testProtocolFeeNullAddress() public {
         // Set protocol fee to 50%
-        marketplace.setProtocolFee(5000); 
+        marketplace.setProtocolFee(5000);
 
         // Null address as protocol fee reciever
         address protocolFeeReciever = address(0x0);
@@ -321,11 +322,8 @@ contract MarketplaceTest is TestTokenMinter {
         // Bob mints an ERC721 token
         test721_1.mint(bob, 0);
         assertInitialTokenBalances(bob, alice);
-        
-        setApprovals({
-            addressToApproveErc721 : bob,
-            addressToApproveErc20 : alice
-        });
+
+        setApprovals({addressToApproveErc721: bob, addressToApproveErc20: alice});
 
         // Bob creates an order to sell his nft for 20 ERC20 tokens
         Orders.Order memory order = Orders.Order({
@@ -339,9 +337,9 @@ contract MarketplaceTest is TestTokenMinter {
             amount: DEFAULT_TOKEN_AMOUNT,
             price: DEFAULT_TOKEN_PRICE,
             currency: address(token1),
-            v : 0,
-            r : "",
-            s : ""
+            v: 0,
+            r: "",
+            s: ""
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -353,10 +351,7 @@ contract MarketplaceTest is TestTokenMinter {
         // Alice mints an ERC721 token
         test721_1.mint(alice, 0);
         assertInitialTokenBalances(alice, bob);
-        setApprovals({
-            addressToApproveErc721 : alice,
-            addressToApproveErc20 : bob
-        });
+        setApprovals({addressToApproveErc721: alice, addressToApproveErc20: bob});
         // Bob creates a bid order to buy alices NFT for 20 ERC20 tokens
         Orders.Order memory order = Orders.Order({
             isAsk: false,
@@ -369,9 +364,9 @@ contract MarketplaceTest is TestTokenMinter {
             amount: DEFAULT_TOKEN_AMOUNT,
             price: DEFAULT_TOKEN_PRICE,
             currency: address(token1),
-            v : 0,
-            r : "",
-            s : ""
+            v: 0,
+            r: "",
+            s: ""
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -383,7 +378,7 @@ contract MarketplaceTest is TestTokenMinter {
         // Bob mints an ERC721 token
         test1155_1.mint(bob, 0, 10);
         assertEq(test1155_1.balanceOf(bob, 0), 10);
-        assertEq(test1155_1.balanceOf(alice, 0 ), 0);
+        assertEq(test1155_1.balanceOf(alice, 0), 0);
         assertEq(token1.balanceOf(bob), STARTING_ERC20_AMOUNT);
         assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT);
 
@@ -407,9 +402,9 @@ contract MarketplaceTest is TestTokenMinter {
             amount: 10,
             price: DEFAULT_TOKEN_PRICE,
             currency: address(token1),
-            v : 0,
-            r : "",
-            s : ""
+            v: 0,
+            r: "",
+            s: ""
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());

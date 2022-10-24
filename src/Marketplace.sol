@@ -158,7 +158,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         if ((PROTOCOL_FEE_RECIEVER != address(0)) && (protocolFeeAmount != 0)) {
             IERC20(currency).transferFrom(from, PROTOCOL_FEE_RECIEVER, protocolFeeAmount);
             finalAmount -= protocolFeeAmount;
-        } 
+        }
 
         // Transfer payment
         IERC20(currency).transferFrom(from, to, finalAmount);

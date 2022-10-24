@@ -91,7 +91,7 @@ contract TestTokenMinter is Test {
         test1155_2 = new TestERC1155();
         test1155_3 = new TestERC1155();
         test1271_1 = new TestERC1271();
-        
+
         vm.label(address(token1), "token1");
         vm.label(address(test721_1), "test721_1");
         vm.label(address(test1155_1), "test1155_1");
