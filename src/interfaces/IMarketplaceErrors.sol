@@ -1,13 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-// TODO: add docs for each error
-// see, for example: https://github.com/hifi-finance/hifi/tree/main/packages/protocol/contracts/core
+
 interface IMarketplaceErrors {
+    /// @notice Emitted when theres an attempt to fulfill an order with an invalid nonce
     error InvalidNonce();
+
+    /// @notice Emitted when theres an attempt to fulfill an order with endTime in the past
     error OrderExpired();
+
+    /// @notice Emitted when theres an attempt to fulfill an order with startTime in the future
     error OrderNotActive();
-    error InvalidTokenAmount();
+
+    /// @notice Emitted when theres an attempt to fulfill an order in which the provided collection interface is not supported
+    error InterfaceNotSupported();
+
+    /// @notice Emitted when theres an attempt to fulfill an order in which the signer is the null address
     error InvalidSigner();
-    error InvalidSignature();
+
+    /// @notice Emitted when theres an attempt to fulfill an order on a chain different than the one hardcoded into the contract
+    error InvalidChain();
 }

@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {TestERC20} from "../test/TestERC20.sol";
 import {TestERC721} from "../test/TestERC721.sol";
 import {TestERC1155} from "../test/TestERC1155.sol";
+import {TestERC1271} from "../test/TestERC1271.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract TestTokenMinter is Test {
@@ -28,6 +29,8 @@ contract TestTokenMinter is Test {
     TestERC1155 internal test1155_1;
     TestERC1155 internal test1155_2;
     TestERC1155 internal test1155_3;
+
+    TestERC1271 internal test1271_1;
 
     TestERC20[] erc20s;
     TestERC721[] erc721s;
@@ -87,7 +90,8 @@ contract TestTokenMinter is Test {
         test1155_1 = new TestERC1155();
         test1155_2 = new TestERC1155();
         test1155_3 = new TestERC1155();
-
+        test1271_1 = new TestERC1271();
+        
         vm.label(address(token1), "token1");
         vm.label(address(test721_1), "test721_1");
         vm.label(address(test1155_1), "test1155_1");
