@@ -2,9 +2,10 @@
 pragma solidity ^0.8.17;
 
 library Orders {
-    bytes32 internal constant ORDER_TYPEHASH = keccak256(
-        "Order(bool isAsk,address signer,uint256 nonce,uint256 startTime,uint256 endTime,address collection,uint256 tokenId,uint256 amount,uint256 price,address currency)"
-    );
+    bytes32 internal constant ORDER_TYPEHASH = 0x769fab4c8e7775520a45b1ec3ead4f5c0187be9971238d0ff4f7a4ff1f1d6e31;
+    // ORDER_TYPEHASH = keccak256(
+    //     "Order(bool isAsk,address signer,uint256 nonce,uint256 startTime,uint256 endTime,address collection,uint256 tokenId,uint256 amount,uint256 price,address currency)"
+    // );
 
     struct Order {
         bool isAsk; // false if bid
