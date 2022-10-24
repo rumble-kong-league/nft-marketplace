@@ -34,7 +34,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     address private PROTOCOL_FEE_RECIEVER;
 
     uint256 constant ETHEREUM_CHAIN_ID = 1;
-    
     bytes32 public constant SALT = 0xcc6bba07dc72ccc06230832cb75198fc8dc757cf7b7e10f1406cbd6867ab4a34;
     // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
     bytes32 public immutable DOMAIN_SEPARATOR;

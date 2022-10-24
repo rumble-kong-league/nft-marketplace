@@ -5,6 +5,7 @@ import "../Order.sol";
 
 /// @title IMarketplace
 /// @author filkny
+/// @author nazariyv
 /// @notice Marketplace interface for the RKL Marketplace
 interface IMarketplace {
 
