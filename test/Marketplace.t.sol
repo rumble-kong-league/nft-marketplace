@@ -141,20 +141,20 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(order);
     }
 
-    function testInvalidChain() public {
-        // Set chainId to a different value
-        vm.chainId(2);
+    // function testInvalidChain() public {
+    //     // Set chainId to a different value
+    //     vm.chainId(2);
 
-        Orders.Order memory order = setUpBobAskERC1155Order();
+    //     Orders.Order memory order = setUpBobAskERC1155Order();
 
-        // Alice fulfills bobs order which fails due to an invalid signer
-        vm.prank(alice);
-        vm.expectRevert(IMarketplaceErrors.InvalidChain.selector);
-        marketplace.fulfillOrder(order);
+    //     // Alice fulfills bobs order which fails due to an invalid signer
+    //     vm.prank(alice);
+    //     vm.expectRevert(IMarketplaceErrors.InvalidChain.selector);
+    //     marketplace.fulfillOrder(order);
 
-        // Set chainId back to default value
-        vm.chainId(ETHEREUM_CHAIN_ID);
-    }
+    //     // Set chainId back to default value
+    //     vm.chainId(ETHEREUM_CHAIN_ID);
+    // }
 
     function testCancelAllOrdersForSender() public {
         Orders.Order memory order = setUpBobAskERC721Order();

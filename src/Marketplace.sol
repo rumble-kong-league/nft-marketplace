@@ -15,7 +15,6 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 
 // !!! When deploying on a new chain do:
 // 1. generate new SALT
-// 2. use new CHAIN_ID
 // !!! When deploying new version do:
 // 1. generate new SALT
 // 2. increment VERSION
@@ -33,7 +32,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     uint256 private PROTOCOL_FEE; // 10000 = 100%
     address private PROTOCOL_FEE_RECIEVER;
 
-    uint256 constant ETHEREUM_CHAIN_ID = 1;
     bytes32 public constant SALT = 0xcc6bba07dc72ccc06230832cb75198fc8dc757cf7b7e10f1406cbd6867ab4a34;
     // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
     bytes32 public immutable DOMAIN_SEPARATOR;
@@ -42,8 +40,8 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     mapping(address => uint256) private userCurrentOrderNonce;
     // keeps track of user's min active nonce
     mapping(address => uint256) private userMinOrderNonce;
-    // keeps track of nonces that have been cancelled
-    mapping(address => mapping(uint256 => bool)) private _isUserOrderNonceExecutedOrCancelled;
+    // keeps track of nonces that have been executed or cancelled
+    mapping(address => mapping(uint256 => bool)) private isUserOrderNonceExecutedOrCancelled;
 
     constructor() {
         DOMAIN_SEPARATOR = keccak256(
@@ -51,7 +49,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
                 0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
                 0xc80aed6001eb579bef6ecf8ec6632ecb0c96a906bf473289ccf79e73ac90fca8, // keccak256(bytes("RKL Marketplace"))
                 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1"))
-                ETHEREUM_CHAIN_ID,
+                block.chainid,
                 address(this),
                 SALT
             )
@@ -60,37 +58,33 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
 
     /**
      * @notice Fulfills an order stored off chain. Call must be made by
-     * either the buyer or the seller depending if the order is an ask or bid.
+     * either the buyer or the seller depending if the order is an ask or a bid.
      * Order must also be signed according to the EIP-712 standard and order.signer
      * must be the address of the order.signature signer.
      * @param order The order to be fulfilled
      */
     function fulfillOrder(Orders.Order calldata order) external {
         _validateOrder(order);
-        // Update signer order status to true (prevents replay)
-        _isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
+        // update signer order status to true (prevents replay)
+        isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
         _fulfillOrder(order);
     }
 
     function _validateOrder(Orders.Order calldata order) internal view {
-        if (block.chainid != ETHEREUM_CHAIN_ID) {
-            revert InvalidChain();
-        }
-
         if (order.signer == address(0)) {
             revert InvalidSigner();
         }
+        // if signed message used a different chain id than the one in DOMAIN_SEPARATOR, this
+        // verification will fail
         SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR);
-
         if (order.startTime > block.timestamp) {
             revert OrderNotActive();
         }
-
         if (order.endTime < block.timestamp) {
             revert OrderExpired();
         }
         if (
-            (_isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce])
+            (isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce])
                 || (order.nonce < userMinOrderNonce[order.signer])
         ) {
             revert InvalidNonce();
@@ -125,7 +119,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         require(orderNonces.length > 0, "Cancel: Cannot be empty");
         for (uint256 i = 0; i < orderNonces.length; i++) {
             require(orderNonces[i] >= userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
-            _isUserOrderNonceExecutedOrCancelled[msg.sender][orderNonces[i]] = true;
+            isUserOrderNonceExecutedOrCancelled[msg.sender][orderNonces[i]] = true;
         }
         emit CancelMultipleOrders(msg.sender, orderNonces);
     }
@@ -177,7 +171,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     }
 
     function getIsUserOrderNonceExecutedOrCanceled(address add, uint256 nonce) public view returns (bool) {
-        return _isUserOrderNonceExecutedOrCancelled[add][nonce];
+        return isUserOrderNonceExecutedOrCancelled[add][nonce];
     }
 
     function getCurrentMinNonceForAddress(address add) public view returns (uint256) {
