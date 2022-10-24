@@ -36,8 +36,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
     // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
     bytes32 public immutable DOMAIN_SEPARATOR;
 
-    // keeps track of user's latest nonce
-    mapping(address => uint256) private userCurrentOrderNonce;
     // keeps track of user's min active nonce
     mapping(address => uint256) private userMinOrderNonce;
     // keeps track of nonces that have been executed or cancelled
@@ -93,7 +91,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
 
     function _fulfillOrder(Orders.Order calldata order) internal {
         (address seller, address buyer) = order.isAsk ? (order.signer, msg.sender) : (msg.sender, order.signer);
-
         _transferFeesAndFunds(buyer, seller, order.currency, order.price);
         _transferNonFungibleToken(order.collection, seller, buyer, order.tokenId, order.amount);
         emit OrderFulfilled(seller, buyer, order.collection, order.tokenId, order.amount, order.currency, order.price);
@@ -160,17 +157,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         IERC20(currency).transferFrom(from, to, finalAmount);
     }
 
-    function setProtocolFeeReciever(address protocolFeeReciever) external onlyOwner {
-        PROTOCOL_FEE_RECIEVER = protocolFeeReciever;
-    }
-
-    function setProtocolFee(uint256 protocolFee) external onlyOwner {
-        PROTOCOL_FEE = protocolFee;
-    }
-
-    function getCurrentNonceForAddress(address add) public view returns (uint256) {
-        return userCurrentOrderNonce[add];
-    }
+    // VIEWS
 
     function getIsUserOrderNonceExecutedOrCanceled(address add, uint256 nonce) public view returns (bool) {
         return isUserOrderNonceExecutedOrCancelled[add][nonce];
@@ -180,12 +167,20 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         return userMinOrderNonce[add];
     }
 
-    function incrementCurrentNonceForAddress(address add) public onlyOwner {
-        userCurrentOrderNonce[add]++;
-    }
-
     function getDomainSeparator() public view returns (bytes32) {
         return DOMAIN_SEPARATOR;
+    }
+
+    // ADMIN
+
+    function setProtocolFeeReciever(address protocolFeeReciever) external onlyOwner {
+        require(protocolFeeReciever != address(0), "Invalid address");
+        PROTOCOL_FEE_RECIEVER = protocolFeeReciever;
+    }
+
+    function setProtocolFee(uint256 protocolFee) external onlyOwner {
+        require(protocolFee < 10000, "Fee cannot be more than 100%");
+        PROTOCOL_FEE = protocolFee;
     }
 }
 

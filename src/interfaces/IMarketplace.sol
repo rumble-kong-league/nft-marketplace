@@ -49,14 +49,6 @@ interface IMarketplace {
     /// @param order The order to be fuliflled
     function fulfillOrder(Orders.Order calldata order) external;
 
-    /// @notice Gets the current nonce for a specific address
-    /// @param add The address for which to return the nonce
-    function getCurrentNonceForAddress(address add) external returns (uint256);
-
-    /// @notice Increments the current nonce for a specific address
-    /// @param add The address for which to increment the current nonce
-    function incrementCurrentNonceForAddress(address add) external;
-
     /// @notice Cancels multiple orders corresponding to the provided nonces
     /// @param orderNonces An array of nonces corresponding to the orders to
     /// be cancelled

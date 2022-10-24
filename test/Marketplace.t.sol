@@ -43,16 +43,6 @@ contract MarketplaceTest is TestTokenMinter {
         vm.chainId(ETHEREUM_CHAIN_ID);
     }
 
-    function testIncrementNonceForContract() public {
-        assertEq(marketplace.getCurrentNonceForAddress(alice), 0);
-        assertEq(marketplace.getCurrentMinNonceForAddress(alice), 0);
-
-        marketplace.incrementCurrentNonceForAddress(alice);
-
-        assertEq(marketplace.getCurrentNonceForAddress(alice), 1);
-        assertEq(marketplace.getCurrentMinNonceForAddress(alice), 0);
-    }
-
     function testFulfillAskERC721Order() public {
         Orders.Order memory order = setUpBobAskERC721Order();
 
@@ -140,21 +130,6 @@ contract MarketplaceTest is TestTokenMinter {
         vm.expectRevert(IMarketplaceErrors.InterfaceNotSupported.selector);
         marketplace.fulfillOrder(order);
     }
-
-    // function testInvalidChain() public {
-    //     // Set chainId to a different value
-    //     vm.chainId(2);
-
-    //     Orders.Order memory order = setUpBobAskERC1155Order();
-
-    //     // Alice fulfills bobs order which fails due to an invalid signer
-    //     vm.prank(alice);
-    //     vm.expectRevert(IMarketplaceErrors.InvalidChain.selector);
-    //     marketplace.fulfillOrder(order);
-
-    //     // Set chainId back to default value
-    //     vm.chainId(ETHEREUM_CHAIN_ID);
-    // }
 
     function testCancelAllOrdersForSender() public {
         Orders.Order memory order = setUpBobAskERC721Order();
@@ -265,24 +240,6 @@ contract MarketplaceTest is TestTokenMinter {
         assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT - DEFAULT_TOKEN_PRICE);
         assertEq(token1.balanceOf(bob), STARTING_ERC20_AMOUNT + DEFAULT_TOKEN_PRICE / 2);
         assertEq(token1.balanceOf(protocolFeeReciever), order.price / 2);
-    }
-
-    function testProtocolFeeNullAddress() public {
-        // Set protocol fee to 50%
-        marketplace.setProtocolFee(5000);
-
-        // Null address as protocol fee reciever
-        address protocolFeeReciever = address(0x0);
-        marketplace.setProtocolFeeReciever(protocolFeeReciever);
-
-        Orders.Order memory order = setUpBobAskERC721Order();
-
-        // Alice fulfills bobs ask order
-        vm.prank(alice);
-        marketplace.fulfillOrder(order);
-
-        // This assert is the same as if there were no fees
-        assertBobAskERC721OrderFulfilled();
     }
 
     function testFulfillAskERC721Order1271Signer() public {

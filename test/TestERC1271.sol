@@ -7,17 +7,18 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 contract TestERC1271 is IERC1271, IERC721Receiver {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
+    function isValidSignature(bytes32, bytes calldata)
         public
-        view
+        pure
         override
         returns (bytes4 magicValue)
     {
         return MAGICVALUE;
     }
 
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
+    function onERC721Received(address, address, uint256, bytes calldata)
         external
+        pure
         returns (bytes4)
     {
         return this.onERC721Received.selector;
