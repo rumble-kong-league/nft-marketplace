@@ -8,6 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "./interfaces/IMarketplaceErrors.sol";
 import "./interfaces/IMarketplace.sol";
@@ -19,10 +20,12 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // 1. generate new SALT
 // 2. increment VERSION
 
+// TODO: revert with custom Error in place of all the require
+
 // How To Improve This Contract
 // 1. Batch transfer a combination of 721s and 1155s. This
 // would utilise safeBatchTransferFrom on the 1155 side.
-contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
+contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGuard {
     using Orders for Orders.Order;
     using ERC165Checker for address;
 
@@ -106,7 +109,6 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         // from ever trading with this contract again
         require(minNonce < userMinOrderNonce[msg.sender] + 500000, "Cancel: Cannot cancel more orders");
         userMinOrderNonce[msg.sender] = minNonce;
-
         emit CancelAllOrdersForUser(msg.sender, minNonce);
     }
 
@@ -133,6 +135,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
      */
     function _transferNonFungibleToken(address collection, address from, address to, uint256 tokenId, uint256 amount)
         internal
+        nonReentrant
     {
         if (collection.supportsInterface(IID_IERC721)) {
             IERC721(collection).safeTransferFrom(from, to, tokenId);
@@ -143,17 +146,13 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable {
         }
     }
 
-    function _transferFeesAndFunds(address from, address to, address currency, uint256 amount) internal {
+    function _transferFeesAndFunds(address from, address to, address currency, uint256 amount) internal nonReentrant {
         uint256 finalAmount = amount;
         uint256 protocolFeeAmount = (PROTOCOL_FEE * amount) / 10000;
-
-        // Check if the protocol fee is different than 0 for this strategy
         if ((PROTOCOL_FEE_RECIEVER != address(0)) && (protocolFeeAmount != 0)) {
-            IERC20(currency).transferFrom(from, PROTOCOL_FEE_RECIEVER, protocolFeeAmount);
             finalAmount -= protocolFeeAmount;
+            IERC20(currency).transferFrom(from, PROTOCOL_FEE_RECIEVER, protocolFeeAmount);
         }
-
-        // Transfer payment
         IERC20(currency).transferFrom(from, to, finalAmount);
     }
 
