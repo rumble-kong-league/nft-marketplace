@@ -122,11 +122,15 @@ contract MarketplaceTest is TestTokenMinter {
     function testInterfaceNotSupported() public {
         Orders.Order memory order = setUpBobAskERC1155Order();
 
-        // Set address to a random collection that is not ERC20 or ERC1155
+        // Set collection to a random collection that is not ERC20 or ERC1155
         order.collection = address(0x9df89266e11A6e018A22d3f542fBF54a4Ef56dd5);
 
-        // Alice fulfills bobs order which fails due to an invalid signer
+        // Recalculate signature with new collection address
+        (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
+
+        // Alice fulfills bobs order which fails due to a not supported interface
         vm.prank(alice);
+
         vm.expectRevert(IMarketplaceErrors.InterfaceNotSupported.selector);
         marketplace.fulfillOrder(order);
     }
@@ -268,6 +272,44 @@ contract MarketplaceTest is TestTokenMinter {
         assertEq(token1.balanceOf(address(test1271_1)), DEFAULT_TOKEN_PRICE);
     }
 
+    function testMerkleFulfillAskERC721Order() public {
+        Orders.Order memory order1 = setUpBobAskERC721Order();
+        Orders.Order memory order2 = setUpBobAskERC1155Order();
+
+        // Merkle tree is composed of 2 orders only
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = order2.hash();
+        order1.proof = proof;
+        order1.root = _hashPair(order1.hash(), order2.hash());
+
+        // We expect an order fulfilled emit
+        vm.expectEmit(true, true, true, true);
+        emit OrderFulfilled(bob, alice, address(test721_1), 0, 1, address(token1), 20);
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+        marketplace.fulfillOrder(order1);
+
+        // Assert that alice got the ERC721 token and bob the ERC20 tokens
+        assertBobAskERC721OrderFulfilled();
+    }
+
+    function testInvalidMerkleProof() public {
+        Orders.Order memory order1 = setUpBobAskERC721Order();
+        Orders.Order memory order2 = setUpBobAskERC1155Order();
+
+        // Merkle tree is composed of 2 orders only
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = ""; // wrong proof
+        order1.proof = proof;
+        order1.root = _hashPair(order1.hash(), order2.hash());
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+        vm.expectRevert(IMarketplaceErrors.InvalidMerkleProof.selector);
+        marketplace.fulfillOrder(order1);
+    }
+
     function assertInitialTokenBalances(address seller, address buyer) internal {
         assertEq(test721_1.balanceOf(buyer), 0);
         assertEq(test721_1.balanceOf(seller), 1);
@@ -281,6 +323,8 @@ contract MarketplaceTest is TestTokenMinter {
         assertInitialTokenBalances(bob, alice);
 
         setApprovals({addressToApproveErc721: bob, addressToApproveErc20: alice});
+
+        bytes32[] memory proof;
 
         // Bob creates an order to sell his nft for 20 ERC20 tokens
         Orders.Order memory order = Orders.Order({
@@ -296,7 +340,9 @@ contract MarketplaceTest is TestTokenMinter {
             currency: address(token1),
             v: 0,
             r: "",
-            s: ""
+            s: "",
+            root: "",
+            proof: proof
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -309,6 +355,9 @@ contract MarketplaceTest is TestTokenMinter {
         test721_1.mint(alice, 0);
         assertInitialTokenBalances(alice, bob);
         setApprovals({addressToApproveErc721: alice, addressToApproveErc20: bob});
+
+        bytes32[] memory proof;
+
         // Bob creates a bid order to buy alices NFT for 20 ERC20 tokens
         Orders.Order memory order = Orders.Order({
             isAsk: false,
@@ -323,7 +372,9 @@ contract MarketplaceTest is TestTokenMinter {
             currency: address(token1),
             v: 0,
             r: "",
-            s: ""
+            s: "",
+            root: "",
+            proof: proof
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -347,6 +398,8 @@ contract MarketplaceTest is TestTokenMinter {
         vm.prank(alice);
         token1.approve(address(marketplace), DEFAULT_TOKEN_PRICE);
 
+        bytes32[] memory proof;
+
         // Bob creates an order to sell his nft for 20 ERC20 tokens
         Orders.Order memory order = Orders.Order({
             isAsk: true,
@@ -361,7 +414,9 @@ contract MarketplaceTest is TestTokenMinter {
             currency: address(token1),
             v: 0,
             r: "",
-            s: ""
+            s: "",
+            root: "",
+            proof: proof
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -407,5 +462,24 @@ contract MarketplaceTest is TestTokenMinter {
         (uint8 v, bytes32 r, bytes32 s) =
             vm.sign(_pkOfSigner, keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, _orderHash)));
         return (r, s, v);
+    }
+
+    /**
+        From MerkleProof.sol
+     */
+    function _hashPair(bytes32 a, bytes32 b) private pure returns (bytes32) {
+        return a < b ? _efficientHash(a, b) : _efficientHash(b, a);
+    }
+
+    /**
+        From MerkleProof.sol
+     */
+    function _efficientHash(bytes32 a, bytes32 b) private pure returns (bytes32 value) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            mstore(0x00, a)
+            mstore(0x20, b)
+            value := keccak256(0x00, 0x40)
+        }
     }
 }

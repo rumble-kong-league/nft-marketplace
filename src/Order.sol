@@ -21,8 +21,8 @@ library Orders {
         uint8 v; // v: parameter (27 or 28)
         bytes32 r; // r: parameter
         bytes32 s; // s: parameter
-        bytes32 root;
-        bytes32[] proof;
+        bytes32 root; // root parameter used for merkle proofs
+        bytes32[] proof; // merkle proof
     }
 
     function hash(Orders.Order memory order) internal pure returns (bytes32) {
