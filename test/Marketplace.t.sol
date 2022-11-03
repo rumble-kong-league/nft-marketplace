@@ -182,7 +182,7 @@ contract MarketplaceTest is TestTokenMinter {
         // Order should still be successfully fulfilled
         assertBobAskERC721OrderFulfilled();
         assertEq(marketplace.getIsUserOrderNonceExecutedOrCanceled(bob, 11), true);
-        assertEq(marketplace.getCurrentMinNonceForAddress(bob),10);
+        assertEq(marketplace.getCurrentMinNonceForAddress(bob), 10);
     }
 
     function testCancelMultipleOrders() public {
@@ -288,7 +288,7 @@ contract MarketplaceTest is TestTokenMinter {
     }
 
     function testMerkleFulfillAskERC721Order() public {
-        // Create a set of orders and hash tem 
+        // Create a set of orders and hash tem
         Orders.Order memory order1 = setUpBobAskERC721Order(0);
         Orders.Order memory order2 = setUpBobAskERC721Order(1);
         Orders.Order memory order3 = setUpBobAskERC721Order(2);
@@ -310,7 +310,7 @@ contract MarketplaceTest is TestTokenMinter {
         // Since we are verifying order1, the proof is composed
         // of H(2), 2nd element of the merkle tree and H(H(3),H(4))
         // the element before the last.
-         
+
         proof.push(merkleTree[1]);
         proof.push(merkleTree[merkleTree.length - 2]);
 
@@ -506,12 +506,12 @@ contract MarketplaceTest is TestTokenMinter {
     }
 
     function buildMerkleTree(bytes32[] storage hashArray) internal returns (bytes32[] storage) {
-        uint count = hashArray.length;  // number of leaves
-        uint offset = 0;
+        uint256 count = hashArray.length; // number of leaves
+        uint256 offset = 0;
 
-        while(count > 0) {
+        while (count > 0) {
             // Iterate 2 by 2, building the hash pairs
-            for(uint i = 0; i < count - 1; i += 2) {
+            for (uint256 i = 0; i < count - 1; i += 2) {
                 hashArray.push(_hashPair(hashArray[offset + i], hashArray[offset + i + 1]));
             }
             offset += count;
@@ -521,14 +521,14 @@ contract MarketplaceTest is TestTokenMinter {
     }
 
     /**
-        From MerkleProof.sol
+     * From MerkleProof.sol
      */
     function _hashPair(bytes32 a, bytes32 b) private pure returns (bytes32) {
         return a < b ? _efficientHash(a, b) : _efficientHash(b, a);
     }
 
     /**
-        From MerkleProof.sol
+     * From MerkleProof.sol
      */
     function _efficientHash(bytes32 a, bytes32 b) private pure returns (bytes32 value) {
         /// @solidity memory-safe-assembly

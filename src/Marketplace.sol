@@ -86,7 +86,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
                 revert InvalidSignature();
             }
         }
-        
+
         if (order.startTime > block.timestamp) {
             revert OrderNotActive();
         }
