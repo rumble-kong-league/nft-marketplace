@@ -104,10 +104,16 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
      * @param minNonce The nonce below which orders should be cancelled
      */
     function cancelAllOrdersForSender(uint256 minNonce) external {
-        require(minNonce > userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
+        if (minNonce <= userMinOrderNonce[msg.sender]) {
+            // Cancel: Order nonce lower than current
+            revert InvalidNonce();
+        }
         // so that the user does not input a nonce that is type(uint256).max and bricks themselves
         // from ever trading with this contract again
-        require(minNonce < userMinOrderNonce[msg.sender] + 500000, "Cancel: Cannot cancel more orders");
+        if (minNonce >= userMinOrderNonce[msg.sender] + 500000) {
+            // Cancel: Cannot cancel more orders
+            revert InvalidNonce();
+        }
         userMinOrderNonce[msg.sender] = minNonce;
         emit CancelAllOrdersForUser(msg.sender, minNonce);
     }
@@ -117,9 +123,15 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
      * @param orderNonces array of nonces corresponding to the orders to be cancelled
      */
     function cancelMultipleOrders(uint256[] calldata orderNonces) external {
-        require(orderNonces.length > 0, "Cancel: Cannot be empty");
+        if (orderNonces.length <= 0) {
+            // Cancel: Cannot be empty
+            revert InvalidNonce();
+        }
         for (uint256 i = 0; i < orderNonces.length; i++) {
-            require(orderNonces[i] >= userMinOrderNonce[msg.sender], "Cancel: Order nonce lower than current");
+            if (orderNonces[i] < userMinOrderNonce[msg.sender]) {
+                // Cancel: Order nonce lower than current
+                revert InvalidNonce();
+            }
             isUserOrderNonceExecutedOrCancelled[msg.sender][orderNonces[i]] = true;
         }
         emit CancelMultipleOrders(msg.sender, orderNonces);
@@ -173,11 +185,13 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
     // ADMIN
 
     function setProtocolFeeReciever(address protocolFeeReciever) external onlyOwner {
+        // no need to make these cutom, admins will be calling these
         require(protocolFeeReciever != address(0), "Invalid address");
         PROTOCOL_FEE_RECIEVER = protocolFeeReciever;
     }
 
     function setProtocolFee(uint256 protocolFee) external onlyOwner {
+        // no need to make these custom, admins will be calling these
         require(protocolFee < 10000, "Fee cannot be more than 100%");
         PROTOCOL_FEE = protocolFee;
     }
