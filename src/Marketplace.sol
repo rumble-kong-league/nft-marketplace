@@ -61,13 +61,15 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
      * either the buyer or the seller depending if the order is an ask or a bid.
      * Order must also be signed according to the EIP-712 standard and order.signer
      * must be the address of the order.signature signer.
-     * @param order The order to be fulfilled
+     * @param orders The orders to be fulfilled
      */
-    function fulfillOrder(Orders.Order calldata order) external {
-        _validateOrder(order);
-        // update signer order status to true (prevents replay)
-        isUserOrderNonceExecutedOrCancelled[order.signer][order.nonce] = true;
-        _fulfillOrder(order);
+    function fulfillOrder(Orders.Order[] calldata orders) external {
+        for (uint256 i = 0; i < orders.length; i++) {
+            _validateOrder(orders[i]);
+            // update signer order status to true (prevents replay)
+            isUserOrderNonceExecutedOrCancelled[orders[i].signer][orders[i].nonce] = true;
+            _fulfillOrder(orders[i]);
+        }
     }
 
     function _validateOrder(Orders.Order calldata order) internal view {

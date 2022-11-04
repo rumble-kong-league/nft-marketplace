@@ -46,8 +46,8 @@ interface IMarketplace {
     /// - order.signer must be signer of the signature composed by order.r
     /// order.s and order.v
     ///
-    /// @param order The order to be fuliflled
-    function fulfillOrder(Orders.Order calldata order) external;
+    /// @param orders The orders to be fuliflled
+    function fulfillOrder(Orders.Order[] calldata orders) external;
 
     /// @notice Cancels multiple orders corresponding to the provided nonces
     /// @param orderNonces An array of nonces corresponding to the orders to
