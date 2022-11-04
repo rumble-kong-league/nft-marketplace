@@ -21,8 +21,6 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // 1. generate new SALT
 // 2. increment VERSION
 
-// TODO: revert with custom Error in place of all the require
-
 // How To Improve This Contract
 // 1. Batch transfer a combination of 721s and 1155s. This
 // would utilise safeBatchTransferFrom on the 1155 side.
