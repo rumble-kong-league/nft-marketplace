@@ -7,7 +7,7 @@ import {TestERC721} from "../test/TestERC721.sol";
 import {TestERC1155} from "../test/TestERC1155.sol";
 import {TestERC1271} from "../test/TestERC1271.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-
+import "@openzeppelin/contracts/utils/Strings.sol";
 contract TestTokenMinter is Test {
     uint256 constant MAX_INT = ~uint256(0);
 
@@ -107,7 +107,7 @@ contract TestTokenMinter is Test {
         for (uint256 i = 0; i < erc20s.length; ++i) {
             erc20s[i].mint(_to, _amount);
         }
-        emit log_named_address("Allocated tokens to", _to);
+        emit log_named_address(string(abi.encodePacked("Allocated ",Strings.toString(_amount), " erc20 tokens to")), _to);
         _setApprovals(_to, _toApprove);
     }
 
