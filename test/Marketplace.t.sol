@@ -363,6 +363,53 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(order1);
     }
 
+    function testAreUserNoncesValid() public {
+        // Bob cancels all orders up to 23
+        vm.startPrank(bob);
+        marketplace.cancelAllOrdersForSender(23);
+
+        // Bob cancels orders with nonce 27, 39, 41 and 45
+        uint256[] memory noncesToCancelBob = new uint256[](2);
+        noncesToCancelBob[0] = 27;
+        noncesToCancelBob[1] = 39;
+        marketplace.cancelMultipleOrders(noncesToCancelBob);         
+        vm.stopPrank();
+
+        // Alice cancels all orders up to 23
+        vm.startPrank(alice);
+        marketplace.cancelAllOrdersForSender(14);
+
+        // Bob cancels orders with nonce 27, 39, 41 and 45
+        uint256[] memory noncesToCancelAlice = new uint256[](2);
+        noncesToCancelAlice[0] = 31;
+        noncesToCancelAlice[1] = 34;
+        marketplace.cancelMultipleOrders(noncesToCancelAlice);         
+        vm.stopPrank();
+
+        // Build inpute for artUserNoncesValid
+        Marketplace.UserNonce[] memory noncesToCheck = new Marketplace.UserNonce[](2);
+        uint256[] memory bobNonces = new uint256[](3);
+        bobNonces[0] = 11;
+        bobNonces[1] = 40;
+        bobNonces[2] = 39;
+        noncesToCheck[0] = Marketplace.UserNonce({user: bob, nonces: bobNonces});
+
+        uint256[] memory aliceNonces = new uint256[](3);
+        aliceNonces[0] = 10;
+        aliceNonces[1] = 27;
+        aliceNonces[2] = 34;
+        noncesToCheck[1] = Marketplace.UserNonce({user: alice, nonces: aliceNonces});
+        
+        bool[][] memory areNoncesValid = marketplace.areUserNoncesValid(noncesToCheck);
+
+        assertEq(areNoncesValid[0][0], false);
+        assertEq(areNoncesValid[0][1], true);
+        assertEq(areNoncesValid[0][2], false);
+        assertEq(areNoncesValid[1][0], false);
+        assertEq(areNoncesValid[1][1], true);
+        assertEq(areNoncesValid[1][2], false);
+    }
+
     function assertInitialTokenBalances(address seller, address buyer) internal {
         assertEq(test721_1.balanceOf(buyer), 0);
         assertEq(test721_1.balanceOf(seller), 1);
