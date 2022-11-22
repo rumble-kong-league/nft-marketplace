@@ -353,82 +353,6 @@ contract MarketplaceTest is TestTokenMinter {
         assertEq(token1.balanceOf(address(test1271_1)), DEFAULT_TOKEN_PRICE);
     }
 
-    function testMerkleFulfillAskERC721Order() public {
-        // Create a set of orders and hash tem
-        Orders.Order memory order1 = setUpBobAskERC721Order(0,0);
-        Orders.Order memory order2 = setUpBobAskERC721Order(1,1);
-        Orders.Order memory order3 = setUpBobAskERC721Order(2,2);
-        Orders.Order memory order4 = setUpBobAskERC721Order(3,3);
-        hashes.push(order1.hash());
-        hashes.push(order2.hash());
-        hashes.push(order3.hash());
-        hashes.push(order4.hash());
-
-        // Build merkle tree based on hashes
-        bytes32[] storage merkleTree = buildMerkleTree(hashes);
-
-        // Root is last element of merkle tree
-        bytes32 root = merkleTree[merkleTree.length - 1];
-
-        //               root
-        //   H(H(1),H(2)) .   H(H(3),H(4))
-        // H(1)  .  H(2)  .  H(3) .  H(4)
-        // Since we are verifying order1, the proof is composed
-        // of H(2), 2nd element of the merkle tree and H(H(3),H(4))
-        // the element before the last.
-
-        proof.push(merkleTree[1]);
-        proof.push(merkleTree[merkleTree.length - 2]);
-
-        order1.root = root;
-        order1.proof = proof;
-
-        // We expect an order fulfilled emit
-        vm.expectEmit(true, true, true, true);
-        emit OrderFulfilled(bob, alice, address(test721_1), 0, 1, address(token1), 20);
-
-        // Alice fulfills bobs order
-        vm.prank(alice);
-        marketplace.fulfillOrder(wrapInArray(order1));
-
-        // Assert that alice got the ERC721 token and bob the ERC20 tokens
-        assertEq(test721_1.balanceOf(alice), 1);
-        assertEq(test721_1.balanceOf(bob), 3);
-        assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT - DEFAULT_TOKEN_PRICE);
-        assertEq(token1.balanceOf(bob), STARTING_ERC20_AMOUNT + DEFAULT_TOKEN_PRICE);
-    }
-
-    function testInvalidMerkleProof() public {
-        // Create a set of orders
-        Orders.Order memory order1 = setUpBobAskERC721Order(0,0);
-        Orders.Order memory order2 = setUpBobAskERC721Order(1,1);
-        Orders.Order memory order3 = setUpBobAskERC721Order(2,2);
-        Orders.Order memory order4 = setUpBobAskERC721Order(3,3);
-        hashes.push(order1.hash());
-        hashes.push(order2.hash());
-        hashes.push(order3.hash());
-        hashes.push(order4.hash());
-
-        // Build the merkle tree for this set of orders
-        bytes32[] storage merkleTree = buildMerkleTree(hashes);
-
-        // Root is the last element of merkle tree
-        bytes32 root = merkleTree[merkleTree.length - 1];
-
-        // Build proof
-        proof.push(merkleTree[0]); // wrong proof, should be merkleTree[1]
-        proof.push(merkleTree[merkleTree.length - 2]);
-
-        // Set proof and root for order 1 to be validated
-        order1.proof = proof;
-        order1.root = root;
-
-        // Alice fulfills bobs order
-        vm.prank(alice);
-        vm.expectRevert(IMarketplaceErrors.InvalidMerkleProof.selector);
-        marketplace.fulfillOrder(wrapInArray(order1));
-    }
-
     function testAreUserNoncesValid() public {
         // Bob cancels all orders up to 23
         vm.startPrank(bob);
@@ -508,9 +432,7 @@ contract MarketplaceTest is TestTokenMinter {
             currency: address(token1),
             v: 0,
             r: "",
-            s: "",
-            root: "",
-            proof: proof
+            s: ""
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -543,9 +465,7 @@ contract MarketplaceTest is TestTokenMinter {
             currency: address(token1),
             v: 0,
             r: "",
-            s: "",
-            root: "",
-            proof: proof
+            s: ""
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
@@ -579,9 +499,7 @@ contract MarketplaceTest is TestTokenMinter {
             currency: address(token1),
             v: 0,
             r: "",
-            s: "",
-            root: "",
-            proof: proof
+            s: ""
         });
 
         (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());

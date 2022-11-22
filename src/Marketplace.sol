@@ -82,17 +82,9 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
         if (order.signer == address(0)) {
             revert InvalidSigner();
         }
-
-        if (order.proof.length > 0) {
-            if (!MerkleProof.verify(order.proof, order.root, order.hash())) {
-                revert InvalidMerkleProof();
-            }
-        } else {
-            if (!SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR)) {
-                revert InvalidSignature();
-            }
+        if (!SignatureChecker.verify(order.hash(), order.signer, order.v, order.r, order.s, DOMAIN_SEPARATOR)) {
+            revert InvalidSignature();
         }
-
         if (order.startTime > block.timestamp) {
             revert OrderNotActive();
         }
