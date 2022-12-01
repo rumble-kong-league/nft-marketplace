@@ -25,4 +25,7 @@ interface IMarketplaceErrors {
 
     /// @notice Emitted when an order's merkle proof is invalid
     error InvalidMerkleProof();
+
+    /// @notice Emitted when theres an attempt to use the marketplace when it's not active.
+    error MarketplaceNotActive();
 }

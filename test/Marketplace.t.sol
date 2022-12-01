@@ -400,6 +400,31 @@ contract MarketplaceTest is TestTokenMinter {
         assertEq(areNoncesValid[1][2], false);
     }
 
+    function testMarketplaceInactive() public {
+        // Make the marketplace inactive
+        marketplace.toggleActive();
+
+        // Create an order for alice to fulfill
+        Orders.Order memory order = setUpBobAskERC721Order(DEFAULT_TOKEN_ID, DEFAULT_NONCE);
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+       
+        // We expect fulfillOrder to fail due to the marketplace not being active
+        vm.expectRevert(IMarketplaceErrors.MarketplaceNotActive.selector); 
+        marketplace.fulfillOrder(wrapInArray(order));
+
+        // Make the marketplace active again
+        marketplace.toggleActive();
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+        marketplace.fulfillOrder(wrapInArray(order));
+
+        // Assert that alice got the ERC721 token and bob the ERC20 tokens
+        assertBobAskERC721OrderFulfilled();  
+    }
+
     function assertInitialTokenBalances(address seller, address buyer) internal {
         assertEq(test721_1.balanceOf(buyer), 0);
         assertEq(test721_1.balanceOf(seller), 1);

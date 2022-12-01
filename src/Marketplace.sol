@@ -28,6 +28,8 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
     using Orders for Orders.Order;
     using ERC165Checker for address;
 
+    bool public active = true;
+
     bytes4 private constant IID_IERC1155 = type(IERC1155).interfaceId;
     bytes4 private constant IID_IERC721 = type(IERC721).interfaceId;
 
@@ -62,6 +64,13 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
         );
     }
 
+    modifier ifActive() {
+        if (!active) {
+            revert MarketplaceNotActive();
+        }
+        _;
+    }
+    
     /**
      * @notice Fulfills an order stored off chain. Call must be made by
      * either the buyer or the seller depending if the order is an ask or a bid.
@@ -69,7 +78,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
      * must be the address of the order.signature signer.
      * @param orders The orders to be fulfilled
      */
-    function fulfillOrder(Orders.Order[] calldata orders) external {
+    function fulfillOrder(Orders.Order[] calldata orders) external ifActive {
         for (uint256 i = 0; i < orders.length; i++) {
             _validateOrder(orders[i]);
             // update signer order status to true (prevents replay)
@@ -226,6 +235,10 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
         // no need to make these custom, admins will be calling these
         require(protocolFee < 10000, "Fee cannot be more than 100%");
         PROTOCOL_FEE = protocolFee;
+    }
+
+    function toggleActive() external onlyOwner {
+        active = !active;
     }
 }
 
