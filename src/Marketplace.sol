@@ -70,7 +70,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
         }
         _;
     }
-    
+
     /**
      * @notice Fulfills an order stored off chain. Call must be made by
      * either the buyer or the seller depending if the order is an ask or a bid.
@@ -119,7 +119,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
      * @notice Cancel all orders below a certain nonce for a user
      * @param minNonce The nonce below which orders should be cancelled
      */
-    function cancelAllOrdersForSender(uint256 minNonce) external {
+    function cancelAllOrdersForSender(uint256 minNonce) external ifActive {
         if (minNonce <= userMinOrderNonce[msg.sender]) {
             // Cancel: Order nonce lower than current
             revert InvalidNonce();
@@ -138,7 +138,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
      * @notice Cancel multiple orders with specific nonces
      * @param orderNonces array of nonces corresponding to the orders to be cancelled
      */
-    function cancelMultipleOrders(uint256[] calldata orderNonces) external {
+    function cancelMultipleOrders(uint256[] calldata orderNonces) external ifActive {
         if (orderNonces.length <= 0) {
             // Cancel: Cannot be empty
             revert InvalidNonce();
