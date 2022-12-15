@@ -205,12 +205,12 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
     function areUserNoncesValid(UserNonce[] calldata userNonces) external view returns (bool[][] memory) {
         bool[][] memory userNoncesAreValid = new bool[][](userNonces.length);
 
-        for(uint256 userIndex = 0; userIndex < userNonces.length; userIndex++) {
+        for (uint256 userIndex = 0; userIndex < userNonces.length; userIndex++) {
             uint256[] memory nonces = userNonces[userIndex].nonces;
             address user = userNonces[userIndex].user;
 
             bool[] memory userNonceValidArr = new bool[](nonces.length);
-            for(uint256 nonceIndex = 0; nonceIndex< nonces.length; nonceIndex++) {
+            for (uint256 nonceIndex = 0; nonceIndex < nonces.length; nonceIndex++) {
                 if (nonces[nonceIndex] < userMinOrderNonce[user]) {
                     userNonceValidArr[nonceIndex] = false;
                 } else {

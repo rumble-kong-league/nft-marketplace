@@ -56,7 +56,7 @@ contract MarketplaceTest is TestTokenMinter {
 
         // Alice fulfills bobs order
         vm.prank(alice);
-        
+
         marketplace.fulfillOrder(wrapInArray(order));
 
         // Assert that alice got the ERC721 token and bob the ERC20 tokens
@@ -71,7 +71,9 @@ contract MarketplaceTest is TestTokenMinter {
         vm.expectEmit(true, true, true, true);
         emit OrderFulfilled(bob, alice, address(test721_1), DEFAULT_TOKEN_ID, 1, address(token1), DEFAULT_TOKEN_PRICE);
         vm.expectEmit(true, true, true, true);
-        emit OrderFulfilled(bob, alice, address(test721_1), DEFAULT_TOKEN_ID + 1, 1, address(token1), DEFAULT_TOKEN_PRICE);
+        emit OrderFulfilled(
+            bob, alice, address(test721_1), DEFAULT_TOKEN_ID + 1, 1, address(token1), DEFAULT_TOKEN_PRICE
+            );
 
         // Wrap orders in array
         Orders.Order[] memory orders = new Orders.Order[](2);
@@ -85,8 +87,8 @@ contract MarketplaceTest is TestTokenMinter {
         // Assert that alice got the 2xERC721 token and bob the 2xprice ERC20 tokens
         assertEq(test721_1.balanceOf(alice), 2);
         assertEq(test721_1.balanceOf(bob), 0);
-        assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT - DEFAULT_TOKEN_PRICE*2);
-        assertEq(token1.balanceOf(bob), STARTING_ERC20_AMOUNT + DEFAULT_TOKEN_PRICE*2);
+        assertEq(token1.balanceOf(alice), STARTING_ERC20_AMOUNT - DEFAULT_TOKEN_PRICE * 2);
+        assertEq(token1.balanceOf(bob), STARTING_ERC20_AMOUNT + DEFAULT_TOKEN_PRICE * 2);
     }
 
     function testFulfillBidERC721Order() public {
@@ -196,19 +198,19 @@ contract MarketplaceTest is TestTokenMinter {
     function testCancelAllOrdersForSenderInvalidNonce() public {
         // Bob cancels all orders up until nonce 10
         vm.prank(bob);
-        marketplace.cancelAllOrdersForSender(10); 
+        marketplace.cancelAllOrdersForSender(10);
 
         // We expect revert because 5 < 10
         vm.prank(bob);
         vm.expectRevert(IMarketplaceErrors.InvalidNonce.selector);
-        marketplace.cancelAllOrdersForSender(5); 
+        marketplace.cancelAllOrdersForSender(5);
     }
 
     function testCancelAllOrdersForSenderNonceTooHigh() public {
         // We expect rever because 600000 > 0 + 500000
         vm.prank(bob);
         vm.expectRevert(IMarketplaceErrors.InvalidNonce.selector);
-        marketplace.cancelAllOrdersForSender(600000); 
+        marketplace.cancelAllOrdersForSender(600000);
     }
 
     function testCancelAllOrdersForSenderBelowCurrent() public {
@@ -248,6 +250,7 @@ contract MarketplaceTest is TestTokenMinter {
     }
 
     uint256[] nonceArray; // init empty storage array
+
     function testCancelMultipleOrdersEmptyArray() public {
         vm.prank(bob);
         vm.expectRevert(IMarketplaceErrors.InvalidNonce.selector);
@@ -257,11 +260,11 @@ contract MarketplaceTest is TestTokenMinter {
     function testCancelMultipleOrdersNonceTooLow() public {
         // Bob cancels all orders up until nonce 10
         vm.prank(bob);
-        marketplace.cancelAllOrdersForSender(10); 
-        
+        marketplace.cancelAllOrdersForSender(10);
+
         // We expect revert because we will try to cancel again order below
         // bobs minUserNonce which is 10 now
-        uint256[] memory faultyNonceArray = new uint256[](1); 
+        uint256[] memory faultyNonceArray = new uint256[](1);
         faultyNonceArray[0] = 4;
         vm.prank(bob);
         vm.expectRevert(IMarketplaceErrors.InvalidNonce.selector);
@@ -362,7 +365,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256[] memory noncesToCancelBob = new uint256[](2);
         noncesToCancelBob[0] = 27;
         noncesToCancelBob[1] = 39;
-        marketplace.cancelMultipleOrders(noncesToCancelBob);         
+        marketplace.cancelMultipleOrders(noncesToCancelBob);
         vm.stopPrank();
 
         // Alice cancels all orders up to 23
@@ -373,7 +376,7 @@ contract MarketplaceTest is TestTokenMinter {
         uint256[] memory noncesToCancelAlice = new uint256[](2);
         noncesToCancelAlice[0] = 31;
         noncesToCancelAlice[1] = 34;
-        marketplace.cancelMultipleOrders(noncesToCancelAlice);         
+        marketplace.cancelMultipleOrders(noncesToCancelAlice);
         vm.stopPrank();
 
         // Build inpute for artUserNoncesValid
@@ -389,7 +392,7 @@ contract MarketplaceTest is TestTokenMinter {
         aliceNonces[1] = 27;
         aliceNonces[2] = 34;
         noncesToCheck[1] = Marketplace.UserNonce({user: alice, nonces: aliceNonces});
-        
+
         bool[][] memory areNoncesValid = marketplace.areUserNoncesValid(noncesToCheck);
 
         assertEq(areNoncesValid[0][0], false);
@@ -409,9 +412,9 @@ contract MarketplaceTest is TestTokenMinter {
 
         // Alice fulfills bobs order
         vm.prank(alice);
-       
+
         // We expect fulfillOrder to fail due to the marketplace not being active
-        vm.expectRevert(IMarketplaceErrors.MarketplaceNotActive.selector); 
+        vm.expectRevert(IMarketplaceErrors.MarketplaceNotActive.selector);
         marketplace.fulfillOrder(wrapInArray(order));
 
         // Make the marketplace active again
@@ -422,7 +425,7 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(wrapInArray(order));
 
         // Assert that alice got the ERC721 token and bob the ERC20 tokens
-        assertBobAskERC721OrderFulfilled();  
+        assertBobAskERC721OrderFulfilled();
     }
 
     function assertInitialTokenBalances(address seller, address buyer) internal {
@@ -468,7 +471,7 @@ contract MarketplaceTest is TestTokenMinter {
     function setUpBobBidERC721Order(uint256 tokenId, uint256 nonce) internal returns (Orders.Order memory) {
         // Alice mints an ERC721 token
         test721_1.mint(alice, tokenId);
-        
+
         setApprovals({
             addressToApproveErc721: alice,
             tokenId: tokenId,
@@ -531,7 +534,12 @@ contract MarketplaceTest is TestTokenMinter {
         return order;
     }
 
-    function setApprovals(address addressToApproveErc721, uint256 tokenId, address addressToApproveErc20, uint256 erc20TokenAmount) internal {
+    function setApprovals(
+        address addressToApproveErc721,
+        uint256 tokenId,
+        address addressToApproveErc20,
+        uint256 erc20TokenAmount
+    ) internal {
         // A approves the marketplace to transfer token 0 on behalf of A
         vm.prank(addressToApproveErc721);
         test721_1.approve(address(marketplace), tokenId);
@@ -563,7 +571,7 @@ contract MarketplaceTest is TestTokenMinter {
         assertEq(marketplace.getIsUserOrderNonceExecutedOrCanceled(bob, 0), true);
     }
 
-    function wrapInArray(Orders.Order memory order) pure internal returns (Orders.Order[] memory) {
+    function wrapInArray(Orders.Order memory order) internal pure returns (Orders.Order[] memory) {
         Orders.Order[] memory array = new Orders.Order[](1);
         array[0] = order;
         return array;
