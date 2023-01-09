@@ -7,11 +7,7 @@ import "forge-std/Test.sol";
 import "../src/Marketplace.sol";
 import "../src/MarketplaceProxy.sol";
 
-/**
-    * @dev This contract inherits the Forge's built-in Test contract.
-    * @notice ERC1967 minimal proxy is just used to demonstrate the condition
-    *         bypassing in the UUPS contract
-    */
+
 contract UpgradeabilityTest is Test {
     using ClonesUpgradeable for address;
 
