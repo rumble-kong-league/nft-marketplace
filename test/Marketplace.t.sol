@@ -53,22 +53,25 @@ contract MarketplaceTest is TestTokenMinter {
         vm.startPrank(owner);
 
         // Deploy the implementation contract        
-        marketplace = new Marketplace();
+        Marketplace marketplace1 = new Marketplace();
 
         // Deploy the proxy admin contract
         proxyAdmin = new ProxyAdmin();
         
         // Deploy the proxy contract
         // bytes memory data = abi.encodeWithSignature("initialize()");
-        proxy = new MarketplaceProxy(address(marketplace), address(proxyAdmin), '');
+        proxy = new MarketplaceProxy(address(marketplace1), address(proxyAdmin), '');
         
 
         vm.stopPrank();
 
         vm.startPrank(owner);
-        marketplace.initialize();
-        marketplace.setProtocolFee(0);
+        marketplace1.initialize();
+        marketplace1.setProtocolFee(0);
+        marketplace = Marketplace(proxyAdmin.getProxyImplementation(proxy));
         vm.stopPrank();
+
+
     }
 
     function testFulfillAskERC721Order() public {
