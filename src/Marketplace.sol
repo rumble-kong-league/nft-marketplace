@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+
+import "@openzeppelin-upgradeable/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import "@openzeppelin-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
+
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,6 +16,7 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 
 import "./interfaces/IMarketplaceErrors.sol";
 import "./interfaces/IMarketplace.sol";
@@ -24,11 +31,12 @@ import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 // How To Improve This Contract
 // 1. Batch transfer a combination of 721s and 1155s. This
 // would utilise safeBatchTransferFrom on the 1155 side.
-contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGuard {
+contract Marketplace is IMarketplace, IMarketplaceErrors, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using Orders for Orders.Order;
     using ERC165Checker for address;
 
     bool public active = true;
+    bool public initialized = false;
 
     bytes4 private constant IID_IERC1155 = type(IERC1155).interfaceId;
     bytes4 private constant IID_IERC721 = type(IERC721).interfaceId;
@@ -38,7 +46,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
 
     bytes32 public constant SALT = 0xcc6bba07dc72ccc06230832cb75198fc8dc757cf7b7e10f1406cbd6867ab4a34;
     // string private constant EIP712_DOMAIN = "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract,bytes32 salt)";
-    bytes32 public immutable DOMAIN_SEPARATOR;
+    bytes32 public DOMAIN_SEPARATOR;
 
     // keeps track of user's min active nonce
     mapping(address => uint256) private userMinOrderNonce;
@@ -51,7 +59,7 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
         uint256[] nonces;
     }
 
-    constructor() {
+    function initialize() public initializer {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 0xd87cd6ef79d4e2b95e15ce8abf732db51ec771f1ca2edccf22a46c729ac56472, // keccak256(bytes(EIP712_DOMAIN))
@@ -62,6 +70,9 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
                 SALT
             )
         );
+        __Ownable_init();
+        __ReentrancyGuard_init();
+        initialized = true;
     }
 
     modifier ifActive() {
@@ -240,6 +251,11 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
     function toggleActive() external onlyOwner {
         active = !active;
     }
+
+    function isInitialized() public view returns (bool) {
+        return initialized;
+    }
+
 }
 
 /*

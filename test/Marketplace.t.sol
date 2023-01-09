@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 
 import "../src/Marketplace.sol";
+import "../src/MarketplaceProxy.sol";
 import "../src/interfaces/IMarketplaceErrors.sol";
 import "../test/TestERC20.sol";
 import "../test/TestERC721.sol";
@@ -13,6 +14,10 @@ contract MarketplaceTest is TestTokenMinter {
     using Orders for Orders.Order;
 
     Marketplace marketplace;
+    ProxyAdmin proxyAdmin;
+    MarketplaceProxy proxy;
+
+    address owner;
 
     uint256 constant ETHEREUM_CHAIN_ID = 1;
     uint256 constant FAR_PAST_TIMESTAMP = 0;
@@ -41,10 +46,29 @@ contract MarketplaceTest is TestTokenMinter {
     event Approval(address owner, address spender, uint256 value);
 
     function setUp() public override {
-        super.setUp();
-        marketplace = new Marketplace();
-        marketplace.setProtocolFee(0);
         vm.chainId(ETHEREUM_CHAIN_ID);
+        owner = vm.addr(1);
+        super.setUp();
+
+        vm.startPrank(owner);
+
+        // Deploy the implementation contract        
+        marketplace = new Marketplace();
+
+        // Deploy the proxy admin contract
+        proxyAdmin = new ProxyAdmin();
+        
+        // Deploy the proxy contract
+        // bytes memory data = abi.encodeWithSignature("initialize()");
+        proxy = new MarketplaceProxy(address(marketplace), address(proxyAdmin), '');
+        
+
+        vm.stopPrank();
+
+        vm.startPrank(owner);
+        marketplace.initialize();
+        marketplace.setProtocolFee(0);
+        vm.stopPrank();
     }
 
     function testFulfillAskERC721Order() public {
@@ -307,10 +331,12 @@ contract MarketplaceTest is TestTokenMinter {
 
     function testProtocolFee() public {
         // Set protocol fee to 50%
+        vm.prank(owner);
         marketplace.setProtocolFee(5000);
 
         // Random address as protocol fee reciever
         address protocolFeeReciever = 0xda84BEe8814F024B81754cbDe9c603440cF92D0B;
+        vm.prank(owner);
         marketplace.setProtocolFeeReciever(protocolFeeReciever);
 
         Orders.Order memory order = setUpBobAskERC721Order(DEFAULT_TOKEN_ID, DEFAULT_NONCE);
@@ -405,6 +431,7 @@ contract MarketplaceTest is TestTokenMinter {
 
     function testMarketplaceInactive() public {
         // Make the marketplace inactive
+        vm.prank(owner);
         marketplace.toggleActive();
 
         // Create an order for alice to fulfill
@@ -418,6 +445,7 @@ contract MarketplaceTest is TestTokenMinter {
         marketplace.fulfillOrder(wrapInArray(order));
 
         // Make the marketplace active again
+        vm.prank(owner);
         marketplace.toggleActive();
 
         // Alice fulfills bobs order
