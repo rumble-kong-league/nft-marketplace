@@ -428,6 +428,28 @@ contract MarketplaceTest is TestTokenMinter {
         assertBobAskERC721OrderFulfilled();
     }
 
+    function testFailFeeTransfer() public {
+        Orders.Order memory order = setUpBobAskERC721Order(DEFAULT_TOKEN_ID, DEFAULT_NONCE);
+        marketplace.setProtocolFee(1 ether); // Force a fee transfer failure
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+        vm.expectRevert(IMarketplaceErrors.FeeTransferFailed.selector);
+        marketplace.fulfillOrder(wrapInArray(order));
+    }
+
+    function testFailERC20Transfer() public {
+        Orders.Order memory order = setUpBobAskERC721Order(DEFAULT_TOKEN_ID, DEFAULT_NONCE);
+        order.price = 100000 ether; // Force an ERC20 transfer failure
+
+        (order.r, order.s, order.v) = getSignatureComponents(marketplace.getDomainSeparator(), bobPk, order.hash());
+
+        // Alice fulfills bobs order
+        vm.prank(alice);
+        vm.expectRevert(IMarketplaceErrors.ERC20TransferFailed.selector);
+        marketplace.fulfillOrder(wrapInArray(order));
+    }
+
     function assertInitialTokenBalances(address seller, address buyer) internal {
         assertEq(test721_1.balanceOf(buyer), 0);
         assertEq(test721_1.balanceOf(seller), 1);
