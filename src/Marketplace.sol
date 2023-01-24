@@ -179,9 +179,16 @@ contract Marketplace is IMarketplace, IMarketplaceErrors, Ownable, ReentrancyGua
         uint256 protocolFeeAmount = (PROTOCOL_FEE * amount) / 10000;
         if ((PROTOCOL_FEE_RECIEVER != address(0)) && (protocolFeeAmount != 0)) {
             finalAmount -= protocolFeeAmount;
-            IERC20(currency).transferFrom(from, PROTOCOL_FEE_RECIEVER, protocolFeeAmount);
+            bool feeTransferSuccess = IERC20(currency).transferFrom(from, PROTOCOL_FEE_RECIEVER, protocolFeeAmount);
+            if (!feeTransferSuccess) {
+                revert FeeTransferFailed();
+            }
         }
-        IERC20(currency).transferFrom(from, to, finalAmount);
+
+        bool transferSuccess = IERC20(currency).transferFrom(from, to, finalAmount);
+        if (!transferSuccess) {
+            revert ERC20TransferFailed();
+        }
     }
 
     // VIEWS

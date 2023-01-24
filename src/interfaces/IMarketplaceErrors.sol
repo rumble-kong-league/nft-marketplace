@@ -28,4 +28,10 @@ interface IMarketplaceErrors {
 
     /// @notice Emitted when theres an attempt to use the marketplace when it's not active.
     error MarketplaceNotActive();
+
+    /// @notice Emitted when the fee transfer fails
+    error FeeTransferFailed();
+
+    /// @notice Emitted when the ERC20 transfer to the seller fails
+    error ERC20TransferFailed();
 }
